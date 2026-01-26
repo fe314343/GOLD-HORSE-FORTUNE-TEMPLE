@@ -49,6 +49,16 @@
 
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         .safe-area-pb { padding-bottom: env(safe-area-inset-bottom); }
+        
+        /* 啟動按鈕發光效果 */
+        .glow-button {
+            box-shadow: 0 0 15px rgba(252, 211, 77, 0.5);
+            transition: all 0.3s ease;
+        }
+        .glow-button:hover {
+            box-shadow: 0 0 25px rgba(252, 211, 77, 0.8);
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
@@ -91,13 +101,15 @@
 
         const Icon = ({ name, size = 24, className = "" }) => {
             useEffect(() => {
-                lucide.createIcons();
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
             }, [name]);
             return <i data-lucide={name} style={{ width: size, height: size }} className={className}></i>;
         };
 
         const CraneVideo = ({ className, style }) => (
-            <video className={className} style={{ ...style, objectFit: 'contain' }} autoPlay loop muted playsInline>
+            <video className={className} style={{ ...style, objectFit: 'contain' }} autoPlay loop muted playsInline shadow-lg>
                 <source src="./assets/crane.mp4" type="video/mp4" />
             </video>
         );
@@ -121,7 +133,7 @@
         );
 
         const App = () => {
-            const [view, setView] = useState('intro');
+            const [view, setView] = useState('welcome'); // 起始狀態設為 welcome
             const [hexNum, setHexNum] = useState('');
             const [selectedHex, setSelectedHex] = useState(null);
             const [showFlash, setShowFlash] = useState(false);
@@ -131,11 +143,15 @@
             const bgmRef = useRef(null);
             const doorSoundRef = useRef(null);
 
+            // 初始化音軌
             useEffect(() => {
-                bgmRef.current = new Audio('./assets/bgm.mp3');
-                bgmRef.current.loop = true;
-                bgmRef.current.volume = 0.5;
-                doorSoundRef.current = new Audio('https://actions.google.com/sounds/v1/doors/wood_door_open.ogg');
+                const bgm = new Audio('./assets/bgm.mp3');
+                bgm.loop = true;
+                bgm.volume = 0.5;
+                bgmRef.current = bgm;
+
+                const door = new Audio('https://actions.google.com/sounds/v1/doors/wood_door_open.ogg');
+                doorSoundRef.current = door;
                 
                 return () => {
                     if (bgmRef.current) {
@@ -145,12 +161,29 @@
                 };
             }, []);
 
+            // 處理進入聚福堂的動作 (解決自動播放限制)
+            const handleStart = () => {
+                if (bgmRef.current) {
+                    bgmRef.current.play()
+                        .then(() => {
+                            setIsMusicPlaying(true);
+                            setView('intro');
+                        })
+                        .catch(err => {
+                            console.log("播放失敗，嘗試切換視圖:", err);
+                            setView('intro'); // 即使失敗也讓使用者進入
+                        });
+                } else {
+                    setView('intro');
+                }
+            };
+
             const toggleMusic = () => {
                 if (bgmRef.current) {
                     if (isMusicPlaying) {
                         bgmRef.current.pause();
                     } else {
-                        bgmRef.current.play().catch(e => console.log("等待點擊播放音訊"));
+                        bgmRef.current.play().catch(e => console.log("需點擊播放音訊"));
                     }
                     setIsMusicPlaying(!isMusicPlaying);
                 }
@@ -161,10 +194,6 @@
                 const num = parseInt(hexNum);
                 if (!num || isNaN(num) || num < 1 || num > 64) return;
                 setIsLoading(true);
-
-                if (!isMusicPlaying && bgmRef.current) {
-                    bgmRef.current.play().then(() => setIsMusicPlaying(true)).catch(() => {});
-                }
 
                 const hex = fullHexagramData.find(h => h.id === num);
                 setSelectedHex(hex);
@@ -188,16 +217,29 @@
 
             return (
                 <div className="relative w-full h-screen overflow-hidden bg-[#2C0A0A] text-yellow-50 selection:bg-yellow-500 selection:text-red-900 flex flex-col">
-                    {/* 音樂控制 */}
-                    <button onClick={toggleMusic} className="absolute top-4 right-4 z-[100] p-3 bg-black/40 rounded-full text-yellow-500 hover:bg-black/60 border border-yellow-500/30 transition-all shadow-md">
-                        <Icon name={isMusicPlaying ? "volume-2" : "volume-x"} />
-                    </button>
-
-                    {/* 背景層 */}
+                    
+                    {/* 背景層 (常駐) */}
                     <div className="absolute inset-0 z-0">
                         <img src="https://images.unsplash.com/photo-1599528766185-5b4372995974?q=80&w=2070&auto=format&fit=crop" alt="Palace" className={`w-full h-full object-cover transition-transform duration-[10s] ${view === 'intro' ? 'scale-100' : 'scale-110'}`} />
-                        <div className="absolute inset-0 bg-gradient-to-b from-[#450a0a]/50 via-[#450a0a]/10 to-[#450a0a]/80"></div>
+                        <div className="absolute inset-0 bg-gradient-to-b from-[#450a0a]/60 via-[#450a0a]/20 to-[#450a0a]/90"></div>
                     </div>
+
+                    {/* 歡迎啟動畫面 (解決自動播放限制的關鍵) */}
+                    {view === 'welcome' && (
+                        <div className="absolute inset-0 z-[200] flex flex-col items-center justify-center bg-black/60 backdrop-blur-md animate-fade-in">
+                            <div className="text-center mb-8">
+                                <h1 className="text-5xl md:text-7xl font-bold text-[#FCD34D] mb-4 tracking-widest drop-shadow-lg">金馬鴻運</h1>
+                                <p className="text-yellow-200/80 tracking-[0.3em] font-serif">歲末迎春 · 靈籤指引</p>
+                            </div>
+                            <button 
+                                onClick={handleStart}
+                                className="glow-button px-12 py-5 bg-gradient-to-r from-[#B45309] to-[#D97706] text-white rounded-full text-2xl font-bold shadow-2xl flex items-center gap-3"
+                            >
+                                <Icon name="music" size={28} /> 進入聚福堂
+                            </button>
+                            <p className="mt-6 text-yellow-500/50 text-sm">點擊進入後自動播放節慶背景音樂</p>
+                        </div>
+                    )}
 
                     {/* 裝飾層 */}
                     <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
@@ -208,7 +250,14 @@
                         </div>
                     </div>
 
-                    {/* 主介面 - 只有在首頁顯示 */}
+                    {/* 音樂控制 (進入後顯示) */}
+                    {view !== 'welcome' && (
+                        <button onClick={toggleMusic} className="absolute top-4 right-4 z-[100] p-3 bg-black/40 rounded-full text-yellow-500 hover:bg-black/60 border border-yellow-500/30 transition-all shadow-md">
+                            <Icon name={isMusicPlaying ? "volume-2" : "volume-x"} />
+                        </button>
+                    )}
+
+                    {/* 首頁介面 */}
                     {view === 'intro' && (
                         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center px-6 animate-fade-in">
                             <div className="mb-12 text-center">
@@ -221,7 +270,7 @@
                                 <div className="absolute -inset-1 bg-gradient-to-r from-[#FCD34D] to-[#B45309] rounded-2xl blur opacity-30"></div>
                                 <div className="relative bg-white/10 backdrop-blur-xl border-2 border-[#FCD34D]/60 p-8 rounded-xl shadow-2xl flex flex-col items-center gap-6">
                                     <div className="bg-[#5c0b0b] px-4 py-1 rounded-full border border-[#FCD34D] shadow-lg mb-2">
-                                        <span className="text-[#FCD34D] text-xs font-bold tracking-widest uppercase">歲末迎春 · 靈籤指引</span>
+                                        <span className="text-[#FCD34D] text-xs font-bold tracking-widest uppercase">誠心祈求 · 靈籤指引</span>
                                     </div>
                                     <form onSubmit={processSelection} className="w-full flex flex-col gap-6">
                                         <input 
@@ -229,7 +278,8 @@
                                             placeholder="輸入籤號 (1-64)" 
                                             value={hexNum} 
                                             onChange={(e) => setHexNum(e.target.value)} 
-                                            className="w-full bg-black/40 border border-[#FCD34D]/30 text-[#FCD34D] text-3xl text-center py-4 rounded-lg focus:outline-none focus:border-[#FCD34D] placeholder:text-yellow-500/20" 
+                                            className="w-full bg-black/40 border border-[#FCD34D]/30 text-[#FCD34D] text-3xl text-center py-4 rounded-lg focus:outline-none focus:border-[#FCD34D] placeholder:text-yellow-500/20 font-serif" 
+                                            autoFocus
                                         />
                                         <button type="submit" disabled={isLoading} className="w-full bg-gradient-to-r from-[#B45309] to-[#D97706] text-white py-4 rounded-lg text-2xl font-bold shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-all">
                                             {isLoading ? <Icon name="refresh-cw" className="animate-spin" /> : <Icon name="sparkles" />}
@@ -268,7 +318,7 @@
                                     </div>
                                     <h2 className="text-4xl font-bold mb-2 text-center text-[#2C0A0A]">{selectedHex.name} · {selectedHex.meaning}</h2>
                                     <p className="text-[#B45309] italic text-lg mb-8 text-center">「{selectedHex.image}」</p>
-                                    <div className="w-full bg-[#FAFAF9] p-6 rounded-lg border-l-4 border-[#B45309] mb-8 text-xl leading-loose text-gray-800">
+                                    <div className="w-full bg-[#FAFAF9] p-6 rounded-lg border-l-4 border-[#B45309] mb-8 text-xl leading-loose font-serif text-gray-800 shadow-sm">
                                         {selectedHex.text}
                                     </div>
                                     <div className="w-full space-y-4 text-left">
@@ -304,7 +354,7 @@
                                     <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
                                         <CraneVideo className="w-full h-full" style={{ transform: 'scale(1.5) scaleX(-1)' }} />
                                     </div>
-                                    <div className="relative z-10 text-gray-800 leading-relaxed text-2xl text-center py-6 border-y border-red-800/10 bg-white/40 rounded-lg shadow-sm">
+                                    <div className="relative z-10 text-gray-800 font-serif leading-relaxed text-2xl text-center py-6 border-y border-red-800/10 bg-white/40 rounded-lg shadow-sm">
                                         {selectedHex.text}
                                     </div>
                                     <div className="relative z-10 flex justify-between items-end mt-12">
