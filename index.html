@@ -4,34 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>金馬鴻運聚福堂 - 2026 靈籤指引</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&display=swap');
         body { font-family: 'Noto Serif TC', serif; }
-        /* 這裡保留你程式碼中的 @keyframes 樣式 */
+
+        /* 動畫定義 */
         @keyframes float-slow { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(10px); } }
         @keyframes float-slower { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-15px); } }
         @keyframes fly-across { 
-            0% { transform: translateX(-20vw) translateY(0) scale(0.8); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { transform: translateX(120vw) translateY(-15vh) scale(1.1); opacity: 0; } 
+          0% { transform: translateX(-20vw) translateY(0) scale(0.8); opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { transform: translateX(120vw) translateY(-15vh) scale(1.1); opacity: 0; } 
         }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes door-left { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(-100deg); } }
         @keyframes door-right { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(100deg); } }
+        
         .animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
         .animate-float-slower { animation: float-slower 8s ease-in-out infinite; }
         .animate-fly-across { animation: fly-across 20s linear infinite; }
         .animate-fade-in { animation: fade-in 0.8s ease-out forwards; }
         .animate-door-left { animation: door-left 2.2s ease-in-out forwards; }
         .animate-door-right { animation: door-right 2.2s ease-in-out forwards; }
+        
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #D4C4B7; border-radius: 3px; }
+        .safe-area-pb { padding-bottom: env(safe-area-inset-bottom); }
     </style>
 </head>
 <body class="bg-[#2C0A0A]">
@@ -39,35 +46,143 @@
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
-        
-        // 由於 CDN 版沒有 Lucide React 組件，改用 Lucide 圖示
+
+        // 由於 CDN 環境沒有 Lucide-React 組件，我們寫一個小包裝來轉換圖示
         const Icon = ({ name, size = 24, className = "" }) => {
             const iconRef = useRef(null);
             useEffect(() => {
-                if (iconRef.current) {
-                    lucide.createIcons({
-                        attrs: {
-                            stroke: "currentColor",
-                            "stroke-width": 2,
-                            "stroke-linecap": "round",
-                            "stroke-linejoin": "round",
-                            width: size,
-                            height: size
-                        },
-                        name: name
-                    });
+                if (window.lucide) {
+                    window.lucide.createIcons();
                 }
             }, [name]);
-            return <i data-lucide={name} className={className} ref={iconRef}></i>;
+            return <i data-lucide={name} className={className} style={{ width: size, height: size }}></i>;
         };
 
-        // ... 這裡貼入你原本的 hexagramsBase, fullHexagramData 等資料 ...
+        /* 六十四卦資料庫 (簡化版，請自行補齊) */
+        const hexagramsBase = [
+            { id: 1, name: "乾", symbol: "天", meaning: "剛健中正", text: "元亨利貞。大哉乾元，萬物資始。", image: "天行健，君子以自強不息。", lucky: "大展宏圖" },
+            { id: 2, name: "坤", symbol: "地", meaning: "柔順寬容", text: "元亨，利牝馬之貞。", image: "地勢坤，君子以厚德載物。", lucky: "厚德載物" },
+            { id: 63, name: "既濟", symbol: "水火", meaning: "大功告成", text: "亨，小利貞，初吉終亂。", image: "水在火上，既濟。", lucky: "功德圓滿" },
+            { id: 64, name: "未濟", symbol: "火水", meaning: "未竟之志", text: "亨，小狐汔濟。", image: "火在水上，未濟。", lucky: "重新出發" }
+        ];
+
+        const fullHexagramData = Array.from({ length: 64 }, (_, i) => {
+            const id = i + 1;
+            const base = hexagramsBase.find(h => h.id === id);
+            return base ? { ...base, lines: ["初爻：潛心修養","二爻：運勢漸展","三爻：謹慎行事","四爻：進退有據","五爻：大吉","上爻：盈不可久"] } 
+                        : { id, name: "吉卦", symbol: "運", meaning: "心誠則靈", text: "吉人天相，必有迴響。", image: "厚德載物", lucky: "萬事如意", lines: ["平安即是福","貴人相助","雲開見月","心想事成"] };
+        });
+
+        const CraneVideo = ({ className, style }) => (
+            <video className={className} style={{ ...style, objectFit: 'contain' }} autoPlay loop muted playsInline>
+                <source src="./assets/crane.mp4" type="video/mp4" />
+            </video>
+        );
+
+        const JuFuTangSeal = ({ className }) => (
+            <svg viewBox="0 0 100 100" className={className}>
+                <rect x="5" y="5" width="90" height="90" rx="3" fill="#B91C1C" opacity="0.9" />
+                <text x="73" y="42" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold">聚</text>
+                <text x="73" y="78" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold">福</text>
+                <text x="27" y="42" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold">堂</text>
+                <text x="27" y="78" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold">印</text>
+            </svg>
+        );
 
         const App = () => {
-            // ... 貼入你原本的 App 組件邏輯 ...
-            // 注意：將 <ChevronLeft /> 改為 <Icon name="chevron-left" />
-            // 將 <Sparkles /> 改為 <Icon name="sparkles" />
-            // 以此類推
+            const [view, setView] = useState('intro');
+            const [hexNum, setHexNum] = useState('');
+            const [selectedHex, setSelectedHex] = useState(null);
+            const [showFlash, setShowFlash] = useState(false);
+            const [isLoading, setIsLoading] = useState(false);
+            const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+            const bgmRef = useRef(null);
+
+            useEffect(() => {
+                bgmRef.current = new Audio('./assets/bgm.mp3');
+                bgmRef.current.loop = true;
+            }, []);
+
+            const toggleMusic = () => {
+                if (isMusicPlaying) bgmRef.current.pause();
+                else bgmRef.current.play().catch(e => console.log("需點擊互動"));
+                setIsMusicPlaying(!isMusicPlaying);
+            };
+
+            const processSelection = (e) => {
+                e.preventDefault();
+                const num = parseInt(hexNum);
+                if (num < 1 || num > 64) return;
+                setIsLoading(true);
+                if (!isMusicPlaying) {
+                    bgmRef.current.play().then(() => setIsMusicPlaying(true)).catch(() => {});
+                }
+                const hex = fullHexagramData.find(h => h.id === num);
+                setSelectedHex(hex);
+                setTimeout(() => {
+                    setView('animating');
+                    setTimeout(() => setShowFlash(true), 1500);
+                    setTimeout(() => { setView('result'); setShowFlash(false); setIsLoading(false); }, 2200);
+                }, 300);
+            };
+
+            return (
+                <div className="relative w-full h-screen overflow-hidden bg-[#2C0A0A] text-yellow-50 flex flex-col">
+                    <button onClick={toggleMusic} className="absolute top-4 right-4 z-[100] p-3 bg-black/40 rounded-full text-yellow-500 border border-yellow-500/30">
+                        <Icon name={isMusicPlaying ? "volume-2" : "volume-x"} />
+                    </button>
+
+                    {/* 背景與首頁內容 - 這裡簡化邏輯，結構與你原程式相同 */}
+                    {view === 'intro' && (
+                        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center animate-fade-in">
+                            <h1 className="text-6xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#FCD34D] to-[#B45309] mb-8">金馬鴻運</h1>
+                            <form onSubmit={processSelection} className="bg-white/10 p-8 rounded-xl border-2 border-[#FCD34D]/60 flex flex-col gap-4">
+                                <input type="number" value={hexNum} onChange={e => setHexNum(e.target.value)} placeholder="1-64" className="bg-black/40 text-center text-3xl py-4 rounded text-yellow-400 focus:outline-none" />
+                                <button type="submit" className="bg-gradient-to-r from-[#B45309] to-[#D97706] px-12 py-4 rounded font-bold text-xl flex items-center gap-2">
+                                    {isLoading ? <Icon name="refresh-cw" className="animate-spin" /> : <Icon name="sparkles" />} 開啟鴻運
+                                </button>
+                            </form>
+                        </div>
+                    )}
+
+                    {/* 轉場大門 */}
+                    {view === 'animating' && (
+                        <div className="absolute inset-0 z-40 flex items-end justify-center transition-transform duration-[2000ms] scale-150">
+                            <div className={`absolute inset-0 bg-white z-0 transition-opacity ${showFlash ? 'opacity-100' : 'opacity-0'}`}></div>
+                            <div className="w-1/2 h-full bg-[#3e0000] border-r-4 border-black animate-door-left"></div>
+                            <div className="w-1/2 h-full bg-[#3e0000] border-l-4 border-black animate-door-right"></div>
+                        </div>
+                    )}
+
+                    {/* 結果頁面 */}
+                    {view === 'result' && selectedHex && (
+                        <div className="absolute inset-0 z-[60] bg-[#F5F5F0] text-[#2a0a0a] overflow-y-auto animate-fade-in p-8">
+                            <button onClick={() => setView('intro')} className="flex items-center gap-2 text-[#7F1D1D] mb-4"><Icon name="chevron-left" /> 返回</button>
+                            <div className="bg-white p-8 rounded shadow-xl border-t-8 border-red-800 text-center">
+                                <h2 className="text-4xl font-bold mb-4">{selectedHex.name}卦</h2>
+                                <p className="text-xl mb-6 font-serif italic">{selectedHex.text}</p>
+                                <button onClick={() => setView('card')} className="bg-[#B45309] text-white px-8 py-4 rounded-full flex items-center gap-2 mx-auto"><Icon name="camera" /> 領取福卡</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 福卡頁面 */}
+                    {view === 'card' && (
+                        <div className="absolute inset-0 z-[70] flex flex-col items-center justify-center p-4">
+                            <div className="absolute inset-0 bg-black/80"></div>
+                            <div className="relative bg-[#FFFBF0] w-full max-w-xs p-8 rounded-lg shadow-2xl text-center">
+                                <h1 className="text-5xl font-bold text-red-700 mb-4">{selectedHex.name}</h1>
+                                <div className="border-y border-red-200 py-6 text-2xl font-serif">{selectedHex.text}</div>
+                                <div className="mt-8 flex justify-between items-end">
+                                    <div className="text-left text-sm text-gray-400">DATE: {new Date().toLocaleDateString()}</div>
+                                    <JuFuTangSeal className="w-16 h-16" />
+                                </div>
+                                <button onClick={() => setView('intro')} className="absolute -bottom-16 left-1/2 -translate-x-1/2 text-white border border-white px-6 py-2 rounded-full">再求一支</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
