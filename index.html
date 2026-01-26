@@ -1,0 +1,336 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { ChevronLeft, BookOpen, Sparkles, Camera, RefreshCw, X, RotateCcw, Volume2, VolumeX, Music } from 'lucide-react';
+
+/**
+ * 金馬鴻運聚福堂 (Gold Horse Fortune Temple) - GitHub Pages 部署專用版
+ * * 部署確認清單：
+ * 1. 檔案位置：請確保檔案位於專案的 public/assets/ 目錄下。
+ * 2. 音樂檔名：bgm.mp3
+ * 3. 影片檔名：crane.mp4
+ */
+
+/*
+=============================================================================
+  【資料庫】六十四卦完整資料庫
+=============================================================================
+*/
+const hexagramsBase = [
+  { id: 1, name: "乾", symbol: "天", meaning: "剛健中正，自強不息", text: "元亨利貞。大哉乾元，萬物資始，乃統天。雲行雨施，品物流形。", image: "天行健，君子以自強不息。", lucky: "大展宏圖" },
+  { id: 2, name: "坤", symbol: "地", meaning: "柔順寬容，厚德載物", text: "元亨，利牝馬之貞。君子有攸往，先迷後得主。", image: "地勢坤，君子以厚德載物。", lucky: "厚德載物" },
+  { id: 3, name: "屯", symbol: "水雷", meaning: "萬物始生，艱難積聚", text: "元亨利貞，勿用有攸往，利建侯。", image: "雲雷屯，君子以經綸。", lucky: "好事多磨" },
+  { id: 4, name: "蒙", symbol: "山水", meaning: "蒙昧初開，啟蒙教化", text: "亨。匪我求童蒙，童蒙求我。", image: "山下出泉，蒙；君子以果行育德。", lucky: "啟蒙開智" },
+  { id: 5, name: "需", symbol: "水天", meaning: "等待時機，飲食宴樂", text: "有孚，光亨，貞吉。利涉大川。", image: "雲上於天，需；君子以飲食宴樂。", lucky: "時機成熟" },
+  { id: 63, name: "既濟", symbol: "水火", meaning: "大功告成，盛極思患", text: "亨，小利貞，初吉終亂。", image: "水在火上，既濟；君子以思患而預防之。", lucky: "功德圓滿" },
+  { id: 64, name: "未濟", symbol: "火水", meaning: "未竟之志，循環不息", text: "亨，小狐汔濟，濡其尾，无攸利。", image: "火在水上，未濟；君子以慎辨物居方。", lucky: "重新出發" }
+];
+
+const fullHexagramData = Array.from({ length: 64 }, (_, i) => {
+  const id = i + 1;
+  const base = hexagramsBase.find(h => h.id === id);
+  return base ? {
+    ...base,
+    lines: [
+      `初爻：${base.name}之初，潛心修養，勿用。`,
+      `二爻：運勢漸展，利見大人，吉。`,
+      `三爻：謹慎行事，雖有波折，无咎。`,
+      `四爻：或躍在淵，進退有據，審時度勢。`,
+      `五爻：${base.lucky}，位居尊位，元吉。`,
+      `上爻：盛極而衰，盈不可久，慎之。`
+    ]
+  } : {
+    id, name: "吉卦", symbol: "運", meaning: "心誠則靈", text: "吉人自有天相，誠心祈求，必有迴響。", image: "厚德載物", lucky: "萬事如意",
+    lines: ["初爻：平安即是福，守正待時。", "二爻：貴人相助，利見大人。", "三爻：小有波折，無礙大局。", "四爻：雲開見月，前途光明。", "五爻：心想事成，福星高照。", "上爻：圓滿吉祥，知足常樂。"]
+  };
+});
+
+/*
+=============================================================================
+  【素材組件】
+=============================================================================
+*/
+
+// 適配 GitHub Pages 的白鶴影片組件
+const CraneVideo = ({ className, style }) => (
+  <video 
+    className={className} 
+    style={{ ...style, objectFit: 'contain' }}
+    autoPlay 
+    loop 
+    muted 
+    playsInline
+  >
+    <source src="./assets/crane.mp4" type="video/mp4" />
+  </video>
+);
+
+const JuFuTangSeal = ({ className }) => (
+  <svg viewBox="0 0 100 100" className={className}>
+    <rect x="5" y="5" width="90" height="90" rx="3" fill="#B91C1C" opacity="0.9" />
+    <rect x="12" y="12" width="76" height="76" rx="2" fill="none" stroke="white" strokeWidth="1.5" opacity="0.6" />
+    <text x="73" y="42" textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="28" fontWeight="bold" fontFamily="serif" style={{letterSpacing: '-2px'}}>聚</text>
+    <text x="73" y="78" textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="28" fontWeight="bold" fontFamily="serif">福</text>
+    <text x="27" y="42" textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="28" fontWeight="bold" fontFamily="serif">堂</text>
+    <text x="27" y="78" textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="28" fontWeight="bold" fontFamily="serif">印</text>
+  </svg>
+);
+
+const SolidCloud = ({ className, style }) => (
+  <svg viewBox="0 0 200 120" className={className} style={style}>
+    <path d="M40,80 Q30,80 30,70 Q30,50 50,50 Q60,30 90,35 Q110,20 140,40 Q160,30 170,60 Q180,70 160,90 Q140,100 110,90 Q90,100 60,90 Q40,100 40,80 Z" fill="#FCD34D" opacity="0.4" />
+    <path d="M50,50 Q60,30 90,35 M140,40 Q160,30 170,60 M60,90 Q40,100 40,80" fill="none" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+/* =============================================================================
+  【主應用程式】
+=============================================================================
+*/
+const App = () => {
+  const [view, setView] = useState('intro');
+  const [hexNum, setHexNum] = useState('');
+  const [selectedHex, setSelectedHex] = useState(null);
+  const [showFlash, setShowFlash] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  
+  const bgmRef = useRef(null);
+  const doorSoundRef = useRef(null);
+
+  useEffect(() => {
+    // 使用相對路徑 ./assets/ 以適配 github.io
+    bgmRef.current = new Audio('./assets/bgm.mp3');
+    bgmRef.current.loop = true;
+    bgmRef.current.volume = 0.5;
+    
+    // 門聲可維持線上連結或同樣放入 assets 資料夾
+    doorSoundRef.current = new Audio('https://actions.google.com/sounds/v1/doors/wood_door_open.ogg');
+    
+    return () => {
+      if (bgmRef.current) {
+        bgmRef.current.pause();
+        bgmRef.current = null;
+      }
+    };
+  }, []);
+
+  const toggleMusic = () => {
+    if (bgmRef.current) {
+      if (isMusicPlaying) {
+        bgmRef.current.pause();
+      } else {
+        bgmRef.current.play().catch(() => console.log("需使用者交互後才能播放"));
+      }
+      setIsMusicPlaying(!isMusicPlaying);
+    }
+  };
+
+  const processSelection = (e) => {
+    e?.preventDefault();
+    const num = parseInt(hexNum);
+    if (!num || isNaN(num) || num < 1 || num > 64) {
+      setErrorMsg('請輸入 1 至 64 之間的數字');
+      return;
+    }
+    setErrorMsg('');
+    setIsLoading(true);
+
+    // 嘗試在點擊時播放背景音樂
+    if (!isMusicPlaying && bgmRef.current) {
+      bgmRef.current.play().then(() => setIsMusicPlaying(true)).catch(() => {});
+    }
+
+    const hex = fullHexagramData.find(h => h.id === num);
+    setSelectedHex(hex);
+    setTimeout(() => {
+      setView('animating');
+      if (doorSoundRef.current) doorSoundRef.current.play().catch(() => {});
+      setTimeout(() => setShowFlash(true), 1500);
+      setTimeout(() => {
+        setView('result');
+        setShowFlash(false);
+        setIsLoading(false);
+      }, 2200);
+    }, 300);
+  };
+
+  const reset = () => {
+    setView('intro');
+    setHexNum('');
+    setSelectedHex(null);
+    setErrorMsg('');
+  };
+
+  return (
+    <div className="relative w-full h-screen overflow-hidden font-serif bg-[#2C0A0A] text-yellow-50 selection:bg-yellow-500 selection:text-red-900 flex flex-col">
+      {/* 音樂切換按鈕 */}
+      <button onClick={toggleMusic} className="absolute top-4 right-4 z-[100] p-3 bg-black/40 rounded-full text-yellow-500 hover:bg-black/60 border border-yellow-500/30 transition-all">
+        {isMusicPlaying ? <Volume2 size={24} /> : <VolumeX size={24} />}
+      </button>
+
+      {/* 背景宮殿圖片 */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="https://images.unsplash.com/photo-1599528766185-5b4372995974?q=80&w=2070&auto=format&fit=crop" 
+          alt="Palace" 
+          className={`w-full h-full object-cover transition-transform duration-[10s] ${view === 'intro' ? 'scale-100' : 'scale-110'}`} 
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#450a0a]/50 via-[#450a0a]/10 to-[#450a0a]/80"></div>
+      </div>
+
+      {/* 白鶴影片與雲朵裝飾 */}
+      <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
+        <SolidCloud className="absolute top-[8%] left-[2%] w-64 h-32 opacity-80 animate-float-slow" />
+        <SolidCloud className="absolute top-[18%] right-[5%] w-80 h-40 opacity-70 animate-float-slower" style={{animationDelay: '2s'}} />
+        <div className="absolute top-[10%] -left-40 animate-fly-across w-80 h-80">
+          <CraneVideo className="w-full h-full" style={{ transform: 'scaleX(-1)' }} />
+        </div>
+      </div>
+
+      {/* 首頁內容 */}
+      {view === 'intro' && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center px-6 animate-fade-in">
+          <div className="mb-12 text-center">
+            <span className="text-yellow-400 text-sm tracking-[0.5em] uppercase block mb-4">Gold Horse Fortune</span>
+            <h1 className="text-6xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#FCD34D] to-[#B45309] tracking-[0.2em]">金馬鴻運</h1>
+            <h2 className="text-5xl md:text-6xl font-bold text-[#FCD34D] mt-2">聚福堂</h2>
+          </div>
+
+          <div className="relative w-full max-w-sm px-6">
+            <div className="absolute -inset-1 bg-gradient-to-r from-[#FCD34D] to-[#B45309] rounded-2xl blur opacity-30"></div>
+            <div className="relative bg-white/10 backdrop-blur-xl border-2 border-[#FCD34D]/60 p-8 rounded-xl shadow-2xl flex flex-col items-center gap-6">
+              <div className="bg-[#5c0b0b] px-4 py-1 rounded-full border border-[#FCD34D] shadow-lg">
+                <span className="text-[#FCD34D] text-xs font-bold tracking-widest">歲末迎春 · 靈籤指引</span>
+              </div>
+              <form onSubmit={processSelection} className="w-full flex flex-col gap-6">
+                <input 
+                  type="number" 
+                  placeholder="輸入籤號 (1-64)" 
+                  value={hexNum} 
+                  onChange={(e) => setHexNum(e.target.value)} 
+                  className="w-full bg-black/40 border border-[#FCD34D]/30 text-[#FCD34D] text-3xl text-center py-4 rounded-lg focus:outline-none focus:border-[#FCD34D] placeholder:text-yellow-500/20 font-serif" 
+                />
+                <button type="submit" disabled={isLoading} className="w-full bg-gradient-to-r from-[#B45309] to-[#D97706] text-white py-4 rounded-lg text-2xl font-bold shadow-lg flex items-center justify-center gap-3 transition-all active:scale-95">
+                  {isLoading ? <RefreshCw className="animate-spin" /> : <Sparkles />}
+                  開啟鴻運
+                </button>
+              </form>
+              {errorMsg && <p className="text-red-300 text-sm font-bold bg-red-900/50 px-3 py-1 rounded animate-bounce">{errorMsg}</p>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 開門過場動畫 */}
+      {view === 'animating' && (
+        <div className="absolute inset-0 z-40 flex items-end justify-center overflow-hidden">
+          <div className="relative w-[600px] h-[700px] flex items-end justify-center transition-transform duration-[2000ms] scale-150">
+            <div className={`absolute inset-0 bg-white z-0 transition-opacity duration-300 ${showFlash ? 'opacity-100' : 'opacity-0'}`}></div>
+            <div className="w-1/2 h-full bg-[#3e0000] border-r-4 border-black z-10 origin-left animate-door-left"></div>
+            <div className="w-1/2 h-full bg-[#3e0000] border-l-4 border-black z-10 origin-right animate-door-right"></div>
+          </div>
+        </div>
+      )}
+
+      {/* 解籤結果頁 */}
+      {view === 'result' && selectedHex && (
+        <div className="absolute inset-0 z-[60] bg-[#F5F5F0] text-[#2a0a0a] overflow-y-auto animate-fade-in custom-scrollbar">
+          <div className="max-w-4xl mx-auto p-6 md:p-8 flex flex-col items-center pb-40">
+            <div className="w-full flex justify-start mb-6">
+              <button onClick={reset} className="flex items-center gap-2 text-[#7F1D1D] font-bold hover:-translate-x-1 transition-transform">
+                <ChevronLeft /> 重返聚福堂
+              </button>
+            </div>
+            <div className="bg-white rounded-xl shadow-xl border w-full p-8 flex flex-col items-center relative overflow-hidden">
+              <div className="h-3 bg-[#991B1B] absolute top-0 left-0 w-full"></div>
+              <div className="w-40 h-40 rounded-full border-4 border-[#B45309] flex items-center justify-center bg-[#FFFBEB] text-8xl text-[#991B1B] mb-8 shadow-inner">
+                {selectedHex.id % 2 === 1 ? '☰' : '☷'}
+              </div>
+              <h2 className="text-4xl font-bold mb-2 text-center">{selectedHex.name} · {selectedHex.meaning}</h2>
+              <p className="text-[#B45309] italic text-lg mb-8 text-center">「{selectedHex.image}」</p>
+              <div className="w-full bg-[#FAFAF9] p-6 rounded-lg border-l-4 border-[#B45309] mb-8 text-xl leading-loose font-serif">
+                {selectedHex.text}
+              </div>
+              <div className="w-full space-y-4 text-left">
+                <h3 className="font-bold text-[#7F1D1D] text-lg border-b pb-2">六爻詳解</h3>
+                {selectedHex.lines.map((line, idx) => (
+                  <div key={idx} className="flex gap-4 p-3 border-b border-gray-100 text-gray-700">
+                    <span className="font-bold text-[#991B1B] min-w-[3.5rem]">{line.split('：')[0]}</span>
+                    <span>{line.split('：')[1] || line}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="fixed bottom-0 left-0 w-full p-6 bg-[#F5F5F0]/90 backdrop-blur border-t z-[70] flex justify-center pb-8 safe-area-pb">
+            <button onClick={() => setView('card')} className="w-full max-w-lg bg-gradient-to-r from-[#B45309] to-[#D97706] text-white py-5 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 text-2xl active:scale-95 transition-all">
+              <Camera size={28} /> 領取福卡
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 福卡卡片頁 */}
+      {view === 'card' && selectedHex && (
+        <div className="absolute inset-0 z-[70] flex flex-col items-center justify-center p-4 animate-fade-in overflow-y-auto">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xl z-0"></div>
+          <div className="relative z-10 w-full max-w-sm bg-white rounded-2xl overflow-hidden shadow-2xl shrink-0">
+            <div className="bg-gradient-to-br from-[#DC2626] to-[#991B1B] p-8 text-center text-white">
+              <h1 className="text-5xl font-bold mb-2">{selectedHex.name}</h1>
+              <p className="text-xl text-yellow-300 font-bold tracking-widest">{selectedHex.lucky || "吉星高照"}</p>
+            </div>
+            <div className="bg-[#FFFBF0] relative p-8 min-h-[350px] flex flex-col justify-between">
+              {/* 卡片內的動態白鶴 */}
+              <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
+                <CraneVideo className="w-full h-full" style={{ transform: 'scale(1.5) scaleX(-1)' }} />
+              </div>
+              <div className="relative z-10 text-gray-800 font-serif leading-relaxed text-2xl text-center py-6 border-y border-red-800/10 bg-white/30 rounded-lg">
+                {selectedHex.text}
+              </div>
+              <div className="relative z-10 flex justify-between items-end mt-12">
+                <div className="text-left text-gray-500">
+                  <p className="text-xs uppercase tracking-widest">Lottery Date</p>
+                  <p className="font-bold">{new Date().toLocaleDateString()}</p>
+                </div>
+                <div className="transform rotate-[-10deg]">
+                   <JuFuTangSeal className="w-20 h-20 shadow-md" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <button onClick={reset} className="relative z-10 mt-8 bg-[#B45309] hover:bg-[#D97706] text-white px-10 py-4 rounded-full font-bold shadow-lg flex items-center gap-2 text-lg active:scale-95 transition-all">
+            <RotateCcw size={20} /> 再求一支
+          </button>
+          <button onClick={() => setView('result')} className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors p-2"><X size={32} /></button>
+        </div>
+      )}
+
+      {/* 動畫樣式 */}
+      <style>{`
+        @keyframes float-slow { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(10px); } }
+        @keyframes float-slower { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-15px); } }
+        @keyframes fly-across { 
+          0% { transform: translateX(-20vw) translateY(0) scale(0.8); opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { transform: translateX(120vw) translateY(-15vh) scale(1); opacity: 0; } 
+        }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes door-left { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(-100deg); } }
+        @keyframes door-right { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(100deg); } }
+        .animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
+        .animate-float-slower { animation: float-slower 8s ease-in-out infinite; }
+        .animate-fly-across { animation: fly-across 18s linear infinite; }
+        .animate-fade-in { animation: fade-in 0.8s ease-out forwards; }
+        .animate-door-left { animation: door-left 2s ease-in-out forwards; }
+        .animate-door-right { animation: door-right 2s ease-in-out forwards; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #D4C4B7; border-radius: 3px; }
+        .safe-area-pb { padding-bottom: env(safe-area-inset-bottom); }
+      `}</style>
+    </div>
+  );
+};
+
+export default App;
