@@ -98,11 +98,11 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- 資源路徑設定 ---
-        // 部署到 GitHub 時，請改回：'./assets/bgm.mp3'、'./assets/crane.mp4'、'./assets/cloud.jpg'
-        const BGM_URL = 'http://googleusercontent.com/file_content/3'; 
-        const CRANE_VIDEO_URL = 'http://googleusercontent.com/file_content/2';
-        const CLOUD_IMAGE_URL = 'http://googleusercontent.com/file_content/4';
+        // --- 資源路徑設定 (適配 GitHub Pages) ---
+        // 請確保您的檔案位於專案根目錄下的 assets 資料夾中
+        const BGM_URL = './assets/bgm.mp3'; 
+        const CRANE_VIDEO_URL = './assets/crane.mp4';
+        const CLOUD_IMAGE_URL = './assets/cloud.jpg';
 
         // --- 資料庫設定 ---
         const hexagramsBase = [
@@ -160,7 +160,6 @@
             );
         };
 
-        // 修改為「崇正寶宮」印章
         const PalaceSeal = ({ className }) => (
             <svg viewBox="0 0 100 100" className={className}>
                 <rect x="5" y="5" width="90" height="90" rx="2" fill="#B91C1C" />
@@ -172,7 +171,6 @@
             </svg>
         );
 
-        // 使用上傳的祥雲圖片元件
         const GoldenCloudImg = ({ className, style }) => (
             <img src={CLOUD_IMAGE_URL} alt="祥雲" className={className} style={{...style, objectFit: 'contain'}} />
         );
@@ -252,7 +250,7 @@
                         <div className="absolute inset-0 bg-gradient-to-b from-[#450a0a]/60 via-[#450a0a]/20 to-[#450a0a]/90"></div>
                     </div>
 
-                    {/* 啟動畫面：運用祥雲圖片 */}
+                    {/* 啟動畫面 */}
                     {view === 'welcome' && (
                         <div className="absolute inset-0 z-[200] flex flex-col items-center justify-center bg-black/60 backdrop-blur-md animate-fade-in overflow-hidden text-center">
                              <GoldenCloudImg className="absolute top-[10%] left-[5%] w-[400px] h-[240px] opacity-30 animate-float-slow" />
@@ -282,7 +280,7 @@
                         </div>
                     </div>
 
-                    {/* 首頁：維持經典樣式 */}
+                    {/* 首頁 */}
                     {view === 'intro' && (
                         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center px-6 animate-fade-in">
                             <div className="mb-12 text-center">
@@ -295,7 +293,7 @@
                                 <div className="absolute -inset-1 bg-gradient-to-r from-[#FCD34D] to-[#B45309] rounded-2xl blur opacity-30"></div>
                                 <div className="relative bg-white/10 backdrop-blur-xl border-2 border-[#FCD34D]/60 p-8 rounded-xl shadow-2xl flex flex-col items-center gap-6 pt-10">
                                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#5c0b0b] px-6 py-1 rounded-full border border-[#FCD34D] shadow-lg z-10 whitespace-nowrap">
-                                        <span className="text-[#FCD34D] text-sm font-bold tracking-widest uppercase">誠心祈求 · 靈籤指引</span>
+                                        <span className="text-[#FCD34D] text-sm font-bold tracking-widest uppercase font-serif">誠心祈求 · 靈籤指引</span>
                                     </div>
                                     <form onSubmit={processSelection} className="w-full flex flex-col gap-6">
                                         <input type="number" placeholder="輸入籤號 (1-64)" value={hexNum} onChange={(e) => setHexNum(e.target.value)} className="w-full bg-black/40 border border-[#FCD34D]/30 text-[#FCD34D] text-3xl text-center py-4 rounded-lg focus:outline-none focus:border-[#FCD34D] placeholder:text-yellow-500/20 font-serif" autoFocus />
@@ -338,7 +336,7 @@
                         </div>
                     )}
 
-                    {/* 解籤結果頁：加入白區白鶴背景 + 紅區祥雲圖片 */}
+                    {/* 解籤結果頁 */}
                     {view === 'result' && selectedHex && (
                         <div className="absolute inset-0 z-[60] bg-[#F5F5F0] text-[#2a0a0a] overflow-y-auto animate-fade-in custom-scrollbar">
                             <div className="max-w-4xl mx-auto p-6 md:p-8 flex flex-col items-center pb-40">
@@ -348,14 +346,12 @@
                                     </button>
                                 </div>
                                 <div className="bg-white rounded-xl shadow-2xl border w-full flex flex-col items-center relative overflow-hidden">
-                                    {/* 頂部紅帶 + 祥雲圖片 */}
                                     <div className="h-14 bg-[#991B1B] absolute top-0 left-0 w-full flex items-center justify-around px-10 overflow-hidden relative">
                                         <GoldenCloudImg className="absolute inset-0 w-full h-full opacity-20 scale-125" />
                                         {[...Array(6)].map((_, i) => <Icon key={i} name="sparkles" className="text-yellow-500/20" size={16} />)}
                                     </div>
                                     
                                     <div className="p-14 flex flex-col items-center relative z-10 w-full">
-                                        {/* 白色區域背景白鶴 */}
                                         <div className="absolute inset-0 z-0 opacity-[0.15] pointer-events-none overflow-hidden flex items-center justify-center">
                                             <CraneVideo className="w-full h-full scale-150" />
                                         </div>
@@ -371,7 +367,7 @@
                                                 <Icon name="book-open" size={20} /> 六爻詳解
                                             </h3>
                                             {selectedHex.lines.map((line, idx) => (
-                                                <div key={idx} className="flex gap-4 p-3 border-b border-gray-100 text-gray-700 hover:bg-gray-50 transition-colors">
+                                                <div key={idx} className="flex gap-4 p-3 border-b border-gray-100 text-gray-700 hover:bg-gray-50 transition-colors font-serif text-lg">
                                                     <span className="font-bold text-[#991B1B] min-w-[3.5rem]">{line.split('：')[0]}</span>
                                                     <span>{line.split('：')[1] || line}</span>
                                                 </div>
@@ -389,7 +385,7 @@
                         </div>
                     )}
 
-                    {/* 福卡頁面：全面運用祥雲圖片與白鶴背景 */}
+                    {/* 福卡頁面 */}
                     {view === 'card' && selectedHex && (
                         <div className="absolute inset-0 z-[70] flex flex-col items-center justify-center p-4 animate-fade-in overflow-y-auto">
                             <div className="absolute inset-0 bg-black/75 backdrop-blur-xl z-0"></div>
@@ -401,12 +397,11 @@
                                 <CornerDecor className="absolute bottom-4 left-4 w-10 h-10 z-30 -rotate-90 opacity-70" />
                                 <CornerDecor className="absolute bottom-4 right-4 w-10 h-10 z-30 rotate-180 opacity-70" />
 
-                                {/* 紅色標頭：運用祥雲圖片 */}
                                 <div className="bg-gradient-to-br from-[#991B1B] via-[#DC2626] to-[#991B1B] p-10 text-center text-white relative shadow-inner overflow-hidden border-b-2 border-yellow-600/30">
                                     <GoldenCloudImg className="absolute -top-10 -left-16 w-[350px] h-[220px] opacity-40 animate-float-slow" />
                                     <GoldenCloudImg className="absolute -bottom-10 -right-20 w-[350px] h-[220px] opacity-40 animate-float-slower" />
                                     
-                                    <div className="text-yellow-400 text-xs tracking-[0.6em] mb-4 uppercase font-bold opacity-80 z-10 font-serif">Golden Horse Fortune Card</div>
+                                    <div className="text-yellow-400 text-xs tracking-[0.6em] mb-4 uppercase font-bold opacity-80 z-10 font-serif text-center">Golden Horse Fortune Card</div>
                                     <div className="w-20 h-20 mx-auto rounded-full border-2 border-yellow-400 flex items-center justify-center bg-white/10 backdrop-blur-sm mb-4 shadow-lg z-10 font-serif">
                                         <span className="text-5xl pt-1">{selectedHex.id % 2 === 1 ? '☰' : '☷'}</span>
                                     </div>
@@ -414,7 +409,6 @@
                                     <p className="text-xl text-yellow-300 font-bold z-10 font-serif">{selectedHex.lucky || "吉星高照"}</p>
                                 </div>
 
-                                {/* 白色底：運用白鶴影片背景 */}
                                 <div className="relative p-10 min-h-[400px] flex flex-col items-center justify-center text-center">
                                     <div className="absolute inset-0 z-0 opacity-[0.45] pointer-events-none overflow-hidden flex items-center justify-center">
                                         <CraneVideo className="w-full h-full scale-[2.2]" style={{ transform: 'scaleX(-1)' }} />
