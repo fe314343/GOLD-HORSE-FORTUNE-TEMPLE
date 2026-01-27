@@ -98,10 +98,11 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- 資源路徑設定 (預覽模式使用內部網址) ---
-        // 部署到 GitHub 後請將路徑改回：'./assets/bgm.mp3' 和 './assets/crane.mp4'
-        const BGM_URL = 'http://googleusercontent.com/file_content/3';
+        // --- 資源路徑設定 ---
+        // 部署到 GitHub 時，請改回：'./assets/bgm.mp3'、'./assets/crane.mp4'、'./assets/cloud.jpg'
+        const BGM_URL = 'http://googleusercontent.com/file_content/3'; 
         const CRANE_VIDEO_URL = 'http://googleusercontent.com/file_content/2';
+        const CLOUD_IMAGE_URL = 'http://googleusercontent.com/file_content/4';
 
         // --- 資料庫設定 ---
         const hexagramsBase = [
@@ -140,12 +141,26 @@
             return <i data-lucide={name} style={{ width: size, height: size }} className={className}></i>;
         };
 
-        const CraneVideo = ({ className, style }) => (
-            <video className={className} style={{ ...style, objectFit: 'contain' }} autoPlay loop muted playsInline>
-                <source src={CRANE_VIDEO_URL} type="video/mp4" />
-            </video>
-        );
+        const CraneVideo = ({ className, style }) => {
+            const vRef = useRef(null);
+            useEffect(() => {
+                if (vRef.current) {
+                    vRef.current.play().catch(() => {});
+                }
+            }, []);
+            return (
+                <video 
+                    ref={vRef}
+                    className={className} 
+                    style={{ ...style, objectFit: 'contain' }} 
+                    autoPlay loop muted playsInline
+                >
+                    <source src={CRANE_VIDEO_URL} type="video/mp4" />
+                </video>
+            );
+        };
 
+        // 修改為「崇正寶宮」印章
         const PalaceSeal = ({ className }) => (
             <svg viewBox="0 0 100 100" className={className}>
                 <rect x="5" y="5" width="90" height="90" rx="2" fill="#B91C1C" />
@@ -157,15 +172,9 @@
             </svg>
         );
 
-        // 加大版的精緻祥雲
-        const GoldenCloud = ({ className, style }) => (
-            <svg viewBox="0 0 200 120" className={className} style={style}>
-                <g fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round">
-                    <path d="M40,80 C20,80 10,60 30,50 C25,30 50,20 70,35 C85,15 120,20 130,45 C155,35 175,60 165,85 C185,95 160,115 130,105 C115,115 85,115 70,100 C45,115 25,100 40,80 Z" strokeOpacity="0.8" />
-                    <path d="M60,60 Q75,45 90,60 M110,55 Q125,40 140,60 M75,85 Q95,75 115,85" strokeOpacity="0.4" />
-                </g>
-                <path d="M40,80 C20,80 10,60 30,50 C25,30 50,20 70,35 C85,15 120,20 130,45 C155,35 175,60 165,85 C185,95 160,115 130,105 C115,115 85,115 70,100 C45,115 25,100 40,80 Z" fill="#FCD34D" fillOpacity="0.15" />
-            </svg>
+        // 使用上傳的祥雲圖片元件
+        const GoldenCloudImg = ({ className, style }) => (
+            <img src={CLOUD_IMAGE_URL} alt="祥雲" className={className} style={{...style, objectFit: 'contain'}} />
         );
 
         const CornerDecor = ({ className }) => (
@@ -191,6 +200,7 @@
                 bgm.loop = true;
                 bgm.volume = 0.5;
                 bgmRef.current = bgm;
+                
                 doorSoundRef.current = new Audio('https://actions.google.com/sounds/v1/doors/wood_door_open.ogg');
                 return () => { if (bgmRef.current) bgmRef.current.pause(); };
             }, []);
@@ -204,7 +214,11 @@
 
             const toggleMusic = () => {
                 if (bgmRef.current) {
-                    isMusicPlaying ? bgmRef.current.pause() : bgmRef.current.play();
+                    if (isMusicPlaying) {
+                        bgmRef.current.pause();
+                    } else {
+                        bgmRef.current.play().catch(() => {});
+                    }
                     setIsMusicPlaying(!isMusicPlaying);
                 }
             };
@@ -217,7 +231,7 @@
                 setSelectedHex(fullHexagramData.find(h => h.id === num));
                 setTimeout(() => {
                     setView('animating');
-                    if (doorSoundRef.current) doorSoundRef.current.play();
+                    if (doorSoundRef.current) doorSoundRef.current.play().catch(() => {});
                     setTimeout(() => setShowFlash(true), 1800);
                     setTimeout(() => {
                         setView('result');
@@ -238,28 +252,20 @@
                         <div className="absolute inset-0 bg-gradient-to-b from-[#450a0a]/60 via-[#450a0a]/20 to-[#450a0a]/90"></div>
                     </div>
 
-                    {/* 啟動畫面 */}
+                    {/* 啟動畫面：運用祥雲圖片 */}
                     {view === 'welcome' && (
-                        <div className="absolute inset-0 z-[200] flex flex-col items-center justify-center bg-black/60 backdrop-blur-md animate-fade-in overflow-hidden">
-                             <GoldenCloud className="absolute top-[5%] left-[5%] w-96 h-48 opacity-20 animate-float-slow" />
-                             <GoldenCloud className="absolute bottom-[5%] right-[5%] w-96 h-48 opacity-20 animate-float-slower" />
-                            <div className="text-center mb-8 relative z-10">
+                        <div className="absolute inset-0 z-[200] flex flex-col items-center justify-center bg-black/60 backdrop-blur-md animate-fade-in overflow-hidden text-center">
+                             <GoldenCloudImg className="absolute top-[10%] left-[5%] w-[400px] h-[240px] opacity-30 animate-float-slow" />
+                             <GoldenCloudImg className="absolute bottom-[10%] right-[5%] w-[400px] h-[240px] opacity-30 animate-float-slower" />
+                            <div className="mb-8 relative z-10">
                                 <h1 className="text-5xl md:text-7xl font-bold text-[#FCD34D] mb-4 tracking-widest drop-shadow-lg font-serif">金馬鴻運</h1>
-                                <p className="text-yellow-200/80 tracking-[0.3em] font-serif">歲末迎春 · 靈籤指引</p>
+                                <p className="text-yellow-200/80 tracking-[0.3em] font-serif text-lg">歲末迎春 · 靈籤指引</p>
                             </div>
-                            <button onClick={handleStart} className="glow-button px-12 py-5 bg-gradient-to-r from-[#B45309] to-[#D97706] text-white rounded-full text-2xl font-bold shadow-2xl flex items-center gap-3 relative z-10">
+                            <button onClick={handleStart} className="glow-button px-12 py-5 bg-gradient-to-r from-[#B45309] to-[#D97706] text-white rounded-full text-2xl font-bold shadow-2xl flex items-center gap-3 relative z-10 active:scale-95 transition-all">
                                 <Icon name="music" size={28} /> 進入聚福堂
                             </button>
                         </div>
                     )}
-
-                    {/* 裝飾層：白鶴與雲朵 */}
-                    <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
-                        <GoldenCloud className="absolute top-[8%] left-[2%] w-80 h-40 opacity-30 animate-float-slow" />
-                        <div className="absolute top-[10%] -left-40 animate-fly-across w-80 h-80">
-                            <CraneVideo className="w-full h-full" style={{ transform: 'scaleX(-1)' }} />
-                        </div>
-                    </div>
 
                     {/* 音樂控制 */}
                     {view !== 'welcome' && (
@@ -268,11 +274,19 @@
                         </button>
                     )}
 
-                    {/* 首頁 */}
+                    {/* 首頁裝飾 */}
+                    <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
+                        <GoldenCloudImg className="absolute top-[8%] left-[2%] w-64 h-48 opacity-40 animate-float-slow" />
+                        <div className="absolute top-[10%] -left-40 animate-fly-across w-80 h-80">
+                            <CraneVideo className="w-full h-full" style={{ transform: 'scaleX(-1)' }} />
+                        </div>
+                    </div>
+
+                    {/* 首頁：維持經典樣式 */}
                     {view === 'intro' && (
                         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center px-6 animate-fade-in">
                             <div className="mb-12 text-center">
-                                <span className="text-yellow-400 text-sm tracking-[0.5em] uppercase block mb-4">Gold Horse Fortune</span>
+                                <span className="text-yellow-400 text-sm tracking-[0.5em] uppercase block mb-4 font-bold">Gold Horse Fortune</span>
                                 <h1 className="text-6xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#FCD34D] to-[#B45309] tracking-[0.2em] drop-shadow-xl font-serif">金馬鴻運</h1>
                                 <h2 className="text-5xl md:text-6xl font-bold text-[#FCD34D] mt-2 drop-shadow-lg font-serif">聚福堂</h2>
                             </div>
@@ -281,7 +295,7 @@
                                 <div className="absolute -inset-1 bg-gradient-to-r from-[#FCD34D] to-[#B45309] rounded-2xl blur opacity-30"></div>
                                 <div className="relative bg-white/10 backdrop-blur-xl border-2 border-[#FCD34D]/60 p-8 rounded-xl shadow-2xl flex flex-col items-center gap-6 pt-10">
                                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#5c0b0b] px-6 py-1 rounded-full border border-[#FCD34D] shadow-lg z-10 whitespace-nowrap">
-                                        <span className="text-[#FCD34D] text-sm font-bold tracking-widest uppercase font-serif">誠心祈求 · 靈籤指引</span>
+                                        <span className="text-[#FCD34D] text-sm font-bold tracking-widest uppercase">誠心祈求 · 靈籤指引</span>
                                     </div>
                                     <form onSubmit={processSelection} className="w-full flex flex-col gap-6">
                                         <input type="number" placeholder="輸入籤號 (1-64)" value={hexNum} onChange={(e) => setHexNum(e.target.value)} className="w-full bg-black/40 border border-[#FCD34D]/30 text-[#FCD34D] text-3xl text-center py-4 rounded-lg focus:outline-none focus:border-[#FCD34D] placeholder:text-yellow-500/20 font-serif" autoFocus />
@@ -297,7 +311,7 @@
 
                     {/* 開門動畫 */}
                     {view === 'animating' && (
-                        <div className="absolute inset-0 z-[150] flex items-end justify-center overflow-hidden perspective-container">
+                        <div className="absolute inset-0 z-150 flex items-end justify-center overflow-hidden perspective-container">
                             <div className="relative w-full max-w-[800px] h-full flex items-end justify-center">
                                 <div className={`absolute inset-0 bg-white/20 z-0 transition-opacity duration-1000 ${showFlash ? 'opacity-100' : 'opacity-0'}`}>
                                     <div className="w-full h-full animate-burst"></div>
@@ -324,7 +338,7 @@
                         </div>
                     )}
 
-                    {/* 解籤結果：白區白鶴背景 */}
+                    {/* 解籤結果頁：加入白區白鶴背景 + 紅區祥雲圖片 */}
                     {view === 'result' && selectedHex && (
                         <div className="absolute inset-0 z-[60] bg-[#F5F5F0] text-[#2a0a0a] overflow-y-auto animate-fade-in custom-scrollbar">
                             <div className="max-w-4xl mx-auto p-6 md:p-8 flex flex-col items-center pb-40">
@@ -334,16 +348,16 @@
                                     </button>
                                 </div>
                                 <div className="bg-white rounded-xl shadow-2xl border w-full flex flex-col items-center relative overflow-hidden">
-                                    {/* 頂部紅帶祥雲 */}
-                                    <div className="h-8 bg-[#991B1B] absolute top-0 left-0 w-full flex items-center justify-around px-10 overflow-hidden relative">
-                                        <GoldenCloud className="absolute inset-0 w-full h-full text-white/10 scale-150" />
-                                        {[...Array(6)].map((_, i) => <Icon key={i} name="cloud" className="text-white/20" size={16} />)}
+                                    {/* 頂部紅帶 + 祥雲圖片 */}
+                                    <div className="h-14 bg-[#991B1B] absolute top-0 left-0 w-full flex items-center justify-around px-10 overflow-hidden relative">
+                                        <GoldenCloudImg className="absolute inset-0 w-full h-full opacity-20 scale-125" />
+                                        {[...Array(6)].map((_, i) => <Icon key={i} name="sparkles" className="text-yellow-500/20" size={16} />)}
                                     </div>
                                     
-                                    <div className="p-8 flex flex-col items-center relative z-10 w-full">
-                                        {/* 白色底白鶴動態 */}
-                                        <div className="absolute inset-0 z-0 opacity-[0.06] pointer-events-none overflow-hidden">
-                                            <CraneVideo className="w-full h-full scale-[1.8]" />
+                                    <div className="p-14 flex flex-col items-center relative z-10 w-full">
+                                        {/* 白色區域背景白鶴 */}
+                                        <div className="absolute inset-0 z-0 opacity-[0.15] pointer-events-none overflow-hidden flex items-center justify-center">
+                                            <CraneVideo className="w-full h-full scale-150" />
                                         </div>
 
                                         <div className="w-40 h-40 rounded-full border-4 border-[#B45309]/20 flex items-center justify-center bg-[#FFFBEB] text-8xl text-[#991B1B] mb-8 shadow-inner relative z-10 font-serif">
@@ -352,10 +366,12 @@
                                         <h2 className="text-4xl font-bold mb-2 text-center text-[#2C0A0A] font-serif z-10">{selectedHex.name} · {selectedHex.meaning}</h2>
                                         <p className="text-[#B45309] italic text-lg mb-8 text-center z-10 font-serif">「{selectedHex.image}」</p>
                                         <div className="w-full bg-[#FAFAF9]/90 backdrop-blur-sm p-6 rounded-lg border-l-4 border-[#B45309] mb-8 text-xl leading-loose font-serif z-10 shadow-sm">{selectedHex.text}</div>
-                                        <div className="w-full space-y-4 text-left z-10">
-                                            <h3 className="font-bold text-[#7F1D1D] text-lg border-b pb-2 font-serif">六爻詳解</h3>
+                                        <div className="w-full space-y-4 text-left z-10 font-serif">
+                                            <h3 className="font-bold text-[#7F1D1D] text-lg border-b pb-2 font-serif flex items-center gap-2">
+                                                <Icon name="book-open" size={20} /> 六爻詳解
+                                            </h3>
                                             {selectedHex.lines.map((line, idx) => (
-                                                <div key={idx} className="flex gap-4 p-3 border-b border-gray-100 text-gray-700 hover:bg-gray-50 transition-colors font-serif text-lg">
+                                                <div key={idx} className="flex gap-4 p-3 border-b border-gray-100 text-gray-700 hover:bg-gray-50 transition-colors">
                                                     <span className="font-bold text-[#991B1B] min-w-[3.5rem]">{line.split('：')[0]}</span>
                                                     <span>{line.split('：')[1] || line}</span>
                                                 </div>
@@ -373,10 +389,10 @@
                         </div>
                     )}
 
-                    {/* 福卡頁面：紅區祥雲 + 白區白鶴 */}
+                    {/* 福卡頁面：全面運用祥雲圖片與白鶴背景 */}
                     {view === 'card' && selectedHex && (
                         <div className="absolute inset-0 z-[70] flex flex-col items-center justify-center p-4 animate-fade-in overflow-y-auto">
-                            <div className="absolute inset-0 bg-black/70 backdrop-blur-xl z-0"></div>
+                            <div className="absolute inset-0 bg-black/75 backdrop-blur-xl z-0"></div>
                             
                             <div className="relative z-10 w-full max-w-md paper-texture rounded-3xl overflow-hidden shadow-2xl border-[10px] border-[#B45309] animate-card-glow shrink-0 flex flex-col">
                                 <div className="absolute inset-2 border border-[#B45309]/20 rounded-2xl pointer-events-none z-20"></div>
@@ -385,11 +401,12 @@
                                 <CornerDecor className="absolute bottom-4 left-4 w-10 h-10 z-30 -rotate-90 opacity-70" />
                                 <CornerDecor className="absolute bottom-4 right-4 w-10 h-10 z-30 rotate-180 opacity-70" />
 
-                                {/* 紅色標頭祥雲 */}
-                                <div className="bg-gradient-to-br from-[#991B1B] via-[#DC2626] to-[#991B1B] p-10 text-center text-white relative shadow-inner overflow-hidden">
-                                    <GoldenCloud className="absolute -top-6 -left-10 w-64 h-32 text-yellow-200/40 animate-float-slow" />
-                                    <GoldenCloud className="absolute -bottom-8 -right-12 w-80 h-40 text-yellow-200/30 animate-float-slower opacity-50" />
-                                    <div className="text-yellow-400 text-xs tracking-[0.6em] mb-4 uppercase font-bold opacity-80 z-10 font-serif">Golden Horse Fortune</div>
+                                {/* 紅色標頭：運用祥雲圖片 */}
+                                <div className="bg-gradient-to-br from-[#991B1B] via-[#DC2626] to-[#991B1B] p-10 text-center text-white relative shadow-inner overflow-hidden border-b-2 border-yellow-600/30">
+                                    <GoldenCloudImg className="absolute -top-10 -left-16 w-[350px] h-[220px] opacity-40 animate-float-slow" />
+                                    <GoldenCloudImg className="absolute -bottom-10 -right-20 w-[350px] h-[220px] opacity-40 animate-float-slower" />
+                                    
+                                    <div className="text-yellow-400 text-xs tracking-[0.6em] mb-4 uppercase font-bold opacity-80 z-10 font-serif">Golden Horse Fortune Card</div>
                                     <div className="w-20 h-20 mx-auto rounded-full border-2 border-yellow-400 flex items-center justify-center bg-white/10 backdrop-blur-sm mb-4 shadow-lg z-10 font-serif">
                                         <span className="text-5xl pt-1">{selectedHex.id % 2 === 1 ? '☰' : '☷'}</span>
                                     </div>
@@ -397,14 +414,14 @@
                                     <p className="text-xl text-yellow-300 font-bold z-10 font-serif">{selectedHex.lucky || "吉星高照"}</p>
                                 </div>
 
-                                {/* 白色底白鶴影片 */}
+                                {/* 白色底：運用白鶴影片背景 */}
                                 <div className="relative p-10 min-h-[400px] flex flex-col items-center justify-center text-center">
-                                    <div className="absolute inset-0 z-0 opacity-[0.35] pointer-events-none overflow-hidden">
+                                    <div className="absolute inset-0 z-0 opacity-[0.45] pointer-events-none overflow-hidden flex items-center justify-center">
                                         <CraneVideo className="w-full h-full scale-[2.2]" style={{ transform: 'scaleX(-1)' }} />
                                     </div>
-                                    <div className="relative z-10 w-full">
-                                        <div className="text-[#991B1B] text-sm mb-4 tracking-[0.3em] font-bold font-serif">— 崇正寶宮靈籤指引 —</div>
-                                        <div className="text-gray-800 font-serif leading-relaxed text-2xl py-8 px-4 border-y-2 border-[#B45309]/10 bg-white/40 rounded-xl shadow-inner">
+                                    <div className="relative z-10 w-full font-serif">
+                                        <div className="text-[#991B1B] text-sm mb-6 tracking-[0.3em] font-bold font-serif">— 崇正寶宮靈籤指引 —</div>
+                                        <div className="text-gray-800 font-serif leading-relaxed text-2xl py-8 px-4 border-y-2 border-[#B45309]/10 bg-white/40 rounded-xl shadow-inner backdrop-blur-[2px]">
                                             {selectedHex.text}
                                         </div>
                                     </div>
