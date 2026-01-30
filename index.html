@@ -71,7 +71,7 @@
         // --- 資料庫 ---
         const hexagramsBase = [
             { id: 1, name: "乾", symbol: "天", meaning: "剛健中正", text: "元亨利貞。大哉乾元，萬物資始，乃統天。", image: "天行健，君子以自強不息。", lucky: "大展宏圖" },
-            { id: 2, name: "坤", symbol: "地", meaning: "柔順寬容", text: "元亨，利牝馬之貞。君子有攸往，先迷後得主。", image: "地勢坤，君子以厚德載物。", lucky: "厚德載物" },
+            { id: 2, name: "坤", symbol: "地", meaning: "柔順寬容", text: "元亨，利牝馬之貞. 君子有攸往，先迷後得主。", image: "地勢坤，君子以厚德載物。", lucky: "厚德載物" },
             { id: 63, name: "既濟", symbol: "水火", meaning: "大功告成", text: "亨，小利貞，初吉終亂。", image: "水在火上，既濟；君子以思患而預防之。", lucky: "功德圓滿" },
             { id: 64, name: "未濟", symbol: "火水", meaning: "未竟之志", text: "亨，小狐汔濟，濡其尾，无攸利。", image: "火在水上，未濟；君子以慎辨物居方。", lucky: "重新出發" }
         ];
@@ -211,11 +211,17 @@
                         {/* 祥雲 1 - 左上 */}
                         <CloudImage className="absolute top-[5%] left-[2%] w-96 opacity-40 animate-float" />
                         
-                        {/* 祥雲 2 - 右中 (新增) */}
+                        {/* 祥雲 2 - 右中 */}
                         <CloudImage className="absolute top-[35%] right-[8%] w-[320px] opacity-25 animate-float" style={{animationDelay: '4s'}} />
                         
-                        {/* 祥雲 3 - 右下 (新增) */}
+                        {/* 祥雲 3 - 右下 */}
                         <CloudImage className="absolute bottom-[10%] right-[3%] w-[450px] opacity-30 animate-float" style={{animationDelay: '7s'}} />
+
+                        {/* 祥雲 4 - 左下 (新增) */}
+                        <CloudImage className="absolute top-[65%] left-[6%] w-[300px] opacity-20 animate-float" style={{animationDelay: '2s'}} />
+                        
+                        {/* 祥雲 5 - 中右上 (新增) */}
+                        <CloudImage className="absolute top-[12%] right-[20%] w-[380px] opacity-15 animate-float" style={{animationDelay: '10s'}} />
 
                         <div className="absolute top-[10%] -left-40 animate-fly-crane w-[500px] h-[500px]">
                             <CraneVideo className="w-full h-full" style={{ transform: 'scaleX(-1)' }} />
@@ -252,7 +258,7 @@
                     {/* 開門動畫 */}
                     {view === 'animating' && (
                         <div className="absolute inset-0 z-150 flex items-end justify-center overflow-hidden perspective-container">
-                            <div className="relative w-full max-w-[800px] h-full flex items-end justify-center">
+                            <div className="relative w-full max-w-[800px] h-full flex items-end justify-center transition-transform duration-1000">
                                 <div className={`absolute inset-0 bg-white/30 z-0 transition-opacity duration-1500 ${showFlash ? 'opacity-100' : 'opacity-0'}`}></div>
                                 <div className="w-1/2 h-full bg-[#3e0000] border-r-2 border-black/40 z-10 relative flex flex-col items-center pt-32 origin-left animate-door-l" 
                                      style={{backgroundImage: 'url(https://www.transparenttextures.com/patterns/wood-pattern.png)'}}>
@@ -266,7 +272,7 @@
                                 <div className="w-1/2 h-full bg-[#3e0000] border-l-2 border-black/40 z-10 relative flex flex-col items-center pt-32 origin-right animate-door-r"
                                      style={{backgroundImage: 'url(https://www.transparenttextures.com/patterns/wood-pattern.png)'}}>
                                     <div className="grid grid-cols-3 gap-8 mb-12 opacity-80">
-                                        {[...Array(9)].map((_,i) => <div key={i} className="w-6 h-6 rounded-full bg-gradient-to-br from-[#FCD34D] to-[#B45309]"></div>)}
+                                        {[...Array(9)].map((_,i) => <div key={i} className="w-4 h-4 rounded-full bg-gradient-to-br from-[#FCD34D] to-[#B45309]"></div>)}
                                     </div>
                                     <div className="w-24 h-24 rounded-full border-4 border-[#B45309] flex items-center justify-center bg-[#5c0b0b] shadow-lg absolute left-4 top-1/2 -translate-y-1/2">
                                         <div className="w-16 h-16 rounded-full border-2 border-[#FCD34D]/50"></div>
@@ -341,7 +347,7 @@
                                     <CloudImage className="absolute -bottom-12 -right-20 w-[400px] opacity-50 animate-float rotate-180" style={{animationDelay: '-3s'}} />
                                     
                                     <div className="text-yellow-400 text-xs tracking-[1.2em] mb-6 uppercase font-bold opacity-80 z-10">Fortune Card</div>
-                                    <div className="w-28 h-28 mx-auto rounded-full border-4 border-yellow-400 flex items-center justify-center bg-white/10 backdrop-blur-md mb-8 shadow-2xl z-10 font-serif">
+                                    <div className="w-28 h-28 mx-auto rounded-full border-4 border-yellow-400 flex items-center justify-center bg-white/10 backdrop-blur-md mb-8 shadow-2xl z-10">
                                         <span className="text-7xl pt-2">{selectedHex.id % 2 === 1 ? '☰' : '☷'}</span>
                                     </div>
                                     <h1 className="text-7xl font-bold mb-4 tracking-widest font-serif z-10 drop-shadow-lg">{selectedHex.name}</h1>
