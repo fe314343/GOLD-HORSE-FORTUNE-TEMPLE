@@ -3,14 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>金馬鴻運 - 靈籤指引</title>
-    <!-- 引用 Tailwind CSS CDN -->
+    <title>金馬鴻運 - 崇正寶宮靈籤</title>
+    <!-- 引用工具庫 -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 引用 React, ReactDOM 與 Babel CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- 引用 Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&display=swap" rel="stylesheet">
     
@@ -23,73 +21,40 @@
             overflow: hidden;
         }
 
-        /* 自定義滾動條 */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #D4C4B7; border-radius: 3px; }
 
-        /* --- 動畫定義 --- */
-        @keyframes float-slow { 0%, 100% { transform: translateX(0) translateY(0); } 50% { transform: translateX(20px) translateY(-15px); } }
-        @keyframes float-slower { 0%, 100% { transform: translateX(0) translateY(0); } 50% { transform: translateX(-30px) translateY(10px); } }
+        /* --- 基本動畫 --- */
+        @keyframes float-slow { 
+            0%, 100% { transform: translate(0, 0); } 
+            50% { transform: translate(20px, -15px); } 
+        }
         
         @keyframes fly-across { 
             0% { transform: translateX(-20vw) translateY(0) scale(0.8); opacity: 0; }
             10% { opacity: 0.8; }
             90% { opacity: 0.8; }
-            100% { transform: translateX(120vw) translateY(-15vh) scale(1); opacity: 0; } 
+            100% { transform: translateX(120vw) translateY(-15vh) scale(1.1); opacity: 0; } 
         }
-        
+
+        @keyframes door-left-open { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(-115deg); } }
+        @keyframes door-right-open { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(115deg); } }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-        
-        /* 門板旋轉動畫 */
-        @keyframes door-left-open { 
-            0% { transform: rotateY(0deg); } 
-            20% { transform: rotateY(-5deg); } 
-            100% { transform: rotateY(-115deg); } 
-        }
-        @keyframes door-right-open { 
-            0% { transform: rotateY(0deg); } 
-            20% { transform: rotateY(5deg); } 
-            100% { transform: rotateY(115deg); } 
-        }
+        @keyframes card-glow { 0%, 100% { box-shadow: 0 0 30px rgba(252, 211, 77, 0.2); } 50% { box-shadow: 0 0 60px rgba(252, 211, 77, 0.4); } }
 
-        @keyframes light-burst {
-            0% { opacity: 0; transform: scale(0.8); }
-            50% { opacity: 1; transform: scale(1.2); }
-            100% { opacity: 0; transform: scale(1.5); }
-        }
-
-        @keyframes card-glow {
-            0%, 100% { box-shadow: 0 0 30px rgba(252, 211, 77, 0.2); }
-            50% { box-shadow: 0 0 60px rgba(252, 211, 77, 0.4); }
-        }
-
-        .animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
-        .animate-float-slower { animation: float-slower 8s ease-in-out infinite; }
-        .animate-fly-across { animation: fly-across 20s linear infinite; }
+        .animate-float { animation: float-slow 10s ease-in-out infinite; }
+        .animate-fly-crane { animation: fly-across 25s linear infinite; }
+        .animate-door-l { animation: door-left-open 3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        .animate-door-r { animation: door-right-open 3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
         .animate-fade-in { animation: fade-in 0.8s ease-out forwards; }
-        .animate-door-left { animation: door-left-open 2.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; }
-        .animate-door-right { animation: door-right-open 2.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; }
-        .animate-burst { animation: light-burst 1.2s ease-out forwards; }
         .animate-card-glow { animation: card-glow 4s ease-in-out infinite; }
 
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        .safe-area-pb { padding-bottom: env(safe-area-inset-bottom); }
-        
-        .glow-button {
-            box-shadow: 0 0 15px rgba(252, 211, 77, 0.5);
-            transition: all 0.3s ease;
-        }
-        .glow-button:hover {
-            box-shadow: 0 0 25px rgba(252, 211, 77, 0.8);
-            transform: scale(1.05);
-        }
-
         .perspective-container { perspective: 1200px; }
-
-        .paper-texture {
+        .paper-bg {
             background-color: #FFFDF9;
             background-image: url("https://www.transparenttextures.com/patterns/handmade-paper.png");
         }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
 <body>
@@ -98,21 +63,17 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- 資源路徑設定 (適配 GitHub Pages) ---
-        // 請確保您的檔案位於專案根目錄下的 assets 資料夾中
+        // --- GitHub Pages 資源路徑 ---
         const BGM_URL = './assets/bgm.mp3'; 
         const CRANE_VIDEO_URL = './assets/crane.mp4';
-        const CLOUD_IMAGE_URL = './assets/cloud.jpg';
+        const CLOUD_IMAGE_URL = './assets/cloud.png';
 
-        // --- 資料庫設定 ---
+        // --- 資料庫 ---
         const hexagramsBase = [
-            { id: 1, name: "乾", symbol: "天", meaning: "剛健中正，自強不息", text: "元亨利貞。大哉乾元，萬物資始，乃統天。雲行雨施，品物流形。", image: "天行健，君子以自強不息。", lucky: "大展宏圖" },
-            { id: 2, name: "坤", symbol: "地", meaning: "柔順寬容，厚德載物", text: "元亨，利牝馬之貞。君子有攸往，先迷後得主。", image: "地勢坤，君子以厚德載物。", lucky: "厚德載物" },
-            { id: 3, name: "屯", symbol: "水雷", meaning: "萬物始生，艱難積聚", text: "元亨利貞，勿用有攸往，利建侯。", image: "雲雷屯，君子以經綸。", lucky: "好事多磨" },
-            { id: 4, name: "蒙", symbol: "山水", meaning: "蒙昧初開，啟蒙教化", text: "亨。匪我求童蒙，童蒙求我。", image: "山下出泉，蒙；君子以果行育德。", lucky: "啟蒙開智" },
-            { id: 5, name: "需", symbol: "水天", meaning: "等待時機，飲食宴樂", text: "有孚，光亨，貞吉。利涉大川。", image: "雲上於天，需；君子以飲食宴樂。", lucky: "時機成熟" },
-            { id: 63, name: "既濟", symbol: "水火", meaning: "大功告成，盛極思患", text: "亨，小利貞，初吉終亂。", image: "水在火上，既濟；君子以思患而預防之。", lucky: "功德圓滿" },
-            { id: 64, name: "未濟", symbol: "火水", meaning: "未竟之志，循環不息", text: "亨，小狐汔濟，濡其尾，无攸利。", image: "火在水上，未濟；君子以慎辨物居方。", lucky: "重新出發" }
+            { id: 1, name: "乾", symbol: "天", meaning: "剛健中正", text: "元亨利貞。大哉乾元，萬物資始，乃統天。", image: "天行健，君子以自強不息。", lucky: "大展宏圖" },
+            { id: 2, name: "坤", symbol: "地", meaning: "柔順寬容", text: "元亨，利牝馬之貞。君子有攸往，先迷後得主。", image: "地勢坤，君子以厚德載物。", lucky: "厚德載物" },
+            { id: 63, name: "既濟", symbol: "水火", meaning: "大功告成", text: "亨，小利貞，初吉終亂。", image: "水在火上，既濟；君子以思患而預防之。", lucky: "功德圓滿" },
+            { id: 64, name: "未濟", symbol: "火水", meaning: "未竟之志", text: "亨，小狐汔濟，濡其尾，无攸利。", image: "火在水上，未濟；君子以慎辨物居方。", lucky: "重新出發" }
         ];
 
         const fullHexagramData = Array.from({ length: 64 }, (_, i) => {
@@ -120,58 +81,36 @@
             const base = hexagramsBase.find(h => h.id === id);
             return base ? {
                 ...base,
-                lines: [
-                    `初爻：${base.name}之初，潛心修養，守正待時。`,
-                    `二爻：運勢漸展，利見大人，吉。`,
-                    `三爻：謹慎行事，雖有波折，无咎。`,
-                    `四爻：或躍在淵，進退有據，審時度勢。`,
-                    `五爻：${base.lucky}，位居尊位，大吉。`,
-                    `上爻：盛極而衰，盈不可久，慎之。`
-                ]
+                lines: [`初爻：${base.name}之初，潛心修養。`, `二爻：運勢漸展，利見大人。`, `三爻：謹慎行事，无咎。`, `四爻：或躍在淵，進退有據。`, `五爻：位居尊位，大吉。`, `上爻：盛極而衰，盈不可久。`]
             } : {
                 id, name: "吉卦", symbol: "運", meaning: "心誠則靈", text: "吉人自有天相，誠心祈求，必有迴響。", image: "厚德載物", lucky: "萬事如意",
-                lines: ["初爻：平安即是福，守正待時。", "二爻：貴人相助，利見大人。", "三爻：小有波折，無礙大局。", "四爻：雲開見月，前途光明。", "五爻：心想事成，福星高照。", "上爻：圓滿吉祥，知足樂樂。"]
+                lines: ["初爻：平安即是福。", "二爻：貴人相助。", "三爻：小有波折。", "四爻：雲開見月。", "五爻：福星高照。", "上爻：知足常樂。"]
             };
         });
 
-        // --- 組件設定 ---
-
+        // --- UI 元件 ---
         const Icon = ({ name, size = 24, className = "" }) => {
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
             return <i data-lucide={name} style={{ width: size, height: size }} className={className}></i>;
         };
 
-        const CraneVideo = ({ className, style }) => {
-            const vRef = useRef(null);
-            useEffect(() => {
-                if (vRef.current) {
-                    vRef.current.play().catch(() => {});
-                }
-            }, []);
-            return (
-                <video 
-                    ref={vRef}
-                    className={className} 
-                    style={{ ...style, objectFit: 'contain' }} 
-                    autoPlay loop muted playsInline
-                >
-                    <source src={CRANE_VIDEO_URL} type="video/mp4" />
-                </video>
-            );
-        };
+        const CraneVideo = ({ className, style }) => (
+            <video className={className} style={{ ...style, objectFit: 'cover' }} autoPlay loop muted playsInline>
+                <source src={CRANE_VIDEO_URL} type="video/mp4" />
+            </video>
+        );
 
         const PalaceSeal = ({ className }) => (
             <svg viewBox="0 0 100 100" className={className}>
-                <rect x="5" y="5" width="90" height="90" rx="2" fill="#B91C1C" />
-                <rect x="10" y="10" width="80" height="80" fill="none" stroke="white" strokeWidth="1" opacity="0.3" />
-                <text x="75" y="38" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold" fontFamily="serif">崇</text>
-                <text x="75" y="78" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold" fontFamily="serif">正</text>
-                <text x="25" y="38" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold" fontFamily="serif">寶</text>
-                <text x="25" y="78" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold" fontFamily="serif">宮</text>
+                <rect x="5" y="5" width="90" height="90" rx="3" fill="#B91C1C" />
+                <text x="75" y="40" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold">崇</text>
+                <text x="75" y="80" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold">正</text>
+                <text x="25" y="40" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold">寶</text>
+                <text x="25" y="80" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold">宮</text>
             </svg>
         );
 
-        const GoldenCloudImg = ({ className, style }) => (
+        const CloudImage = ({ className, style }) => (
             <img src={CLOUD_IMAGE_URL} alt="祥雲" className={className} style={{...style, objectFit: 'contain'}} />
         );
 
@@ -198,25 +137,20 @@
                 bgm.loop = true;
                 bgm.volume = 0.5;
                 bgmRef.current = bgm;
-                
                 doorSoundRef.current = new Audio('https://actions.google.com/sounds/v1/doors/wood_door_open.ogg');
                 return () => { if (bgmRef.current) bgmRef.current.pause(); };
             }, []);
 
             const handleStart = () => {
                 if (bgmRef.current) {
-                    bgmRef.current.play().then(() => setIsMusicPlaying(true)).catch(() => {});
+                    bgmRef.current.play().then(() => setIsMusicPlaying(true)).catch(e => console.warn("音訊播放受限"));
                 }
                 setView('intro');
             };
 
             const toggleMusic = () => {
                 if (bgmRef.current) {
-                    if (isMusicPlaying) {
-                        bgmRef.current.pause();
-                    } else {
-                        bgmRef.current.play().catch(() => {});
-                    }
+                    isMusicPlaying ? bgmRef.current.pause() : bgmRef.current.play();
                     setIsMusicPlaying(!isMusicPlaying);
                 }
             };
@@ -242,62 +176,62 @@
             const reset = () => { setView('intro'); setHexNum(''); setSelectedHex(null); };
 
             return (
-                <div className="relative w-full h-screen overflow-hidden bg-[#2C0A0A] text-yellow-50 selection:bg-yellow-500 selection:text-red-900 flex flex-col font-serif">
+                <div className="relative w-full h-screen overflow-hidden bg-[#2C0A0A] flex flex-col font-serif">
                     
-                    {/* 背景層 */}
-                    <div className="absolute inset-0 z-0">
-                        <img src="https://images.unsplash.com/photo-1599528766185-5b4372995974?q=80&w=2070&auto=format&fit=crop" alt="Palace" className={`w-full h-full object-cover transition-transform duration-[10s] ${view === 'intro' ? 'scale-100' : 'scale-110'}`} />
-                        <div className="absolute inset-0 bg-gradient-to-b from-[#450a0a]/60 via-[#450a0a]/20 to-[#450a0a]/90"></div>
+                    {/* 全域背景 */}
+                    <div className="absolute inset-0 z-0 opacity-40">
+                        <img src="https://images.unsplash.com/photo-1599528766185-5b4372995974?q=80&w=2070&auto=format&fit=crop" alt="Palace" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-[#2C0A0A]/90 via-transparent to-[#2C0A0A]"></div>
                     </div>
 
-                    {/* 啟動畫面 */}
+                    {/* 歡迎畫面 */}
                     {view === 'welcome' && (
-                        <div className="absolute inset-0 z-[200] flex flex-col items-center justify-center bg-black/60 backdrop-blur-md animate-fade-in overflow-hidden text-center">
-                             <GoldenCloudImg className="absolute top-[10%] left-[5%] w-[400px] h-[240px] opacity-30 animate-float-slow" />
-                             <GoldenCloudImg className="absolute bottom-[10%] right-[5%] w-[400px] h-[240px] opacity-30 animate-float-slower" />
-                            <div className="mb-8 relative z-10">
-                                <h1 className="text-5xl md:text-7xl font-bold text-[#FCD34D] mb-4 tracking-widest drop-shadow-lg font-serif">金馬鴻運</h1>
-                                <p className="text-yellow-200/80 tracking-[0.3em] font-serif text-lg">歲末迎春 · 靈籤指引</p>
+                        <div className="absolute inset-0 z-[200] flex flex-col items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in text-center px-4">
+                            <CloudImage className="absolute top-[10%] left-[5%] w-80 opacity-30 animate-float" />
+                            <CloudImage className="absolute bottom-[10%] right-[5%] w-80 opacity-30 animate-float" style={{animationDelay: '-5s'}} />
+                            <div className="mb-12 relative z-10">
+                                <h1 className="text-7xl md:text-9xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#FCD34D] to-[#B45309] tracking-[0.2em] drop-shadow-2xl">金馬鴻運</h1>
+                                <p className="text-yellow-200/80 tracking-[0.5em] text-2xl mt-6 uppercase">崇正寶宮 · 靈籤指引</p>
                             </div>
-                            <button onClick={handleStart} className="glow-button px-12 py-5 bg-gradient-to-r from-[#B45309] to-[#D97706] text-white rounded-full text-2xl font-bold shadow-2xl flex items-center gap-3 relative z-10 active:scale-95 transition-all">
-                                <Icon name="music" size={28} /> 進入聚福堂
+                            <button onClick={handleStart} className="px-16 py-6 bg-gradient-to-r from-[#B45309] to-[#D97706] text-white rounded-full text-3xl font-bold shadow-2xl flex items-center gap-4 relative z-10 active:scale-95 transition-all">
+                                <Icon name="music" size={32} /> 進入聚福堂
                             </button>
                         </div>
                     )}
 
                     {/* 音樂控制 */}
                     {view !== 'welcome' && (
-                        <button onClick={toggleMusic} className="absolute top-4 right-4 z-[100] p-3 bg-black/40 rounded-full text-yellow-500 hover:bg-black/60 border border-yellow-500/30 transition-all shadow-md">
-                            <Icon name={isMusicPlaying ? "volume-2" : "volume-x"} />
+                        <button onClick={toggleMusic} className="absolute top-6 right-6 z-[100] p-4 bg-black/40 rounded-full text-yellow-500 border border-yellow-500/20 transition-all shadow-xl">
+                            {isMusicPlaying ? <Icon name="volume-2" /> : <Icon name="volume-x" />}
                         </button>
                     )}
 
                     {/* 首頁裝飾 */}
                     <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
-                        <GoldenCloudImg className="absolute top-[8%] left-[2%] w-64 h-48 opacity-40 animate-float-slow" />
-                        <div className="absolute top-[10%] -left-40 animate-fly-across w-80 h-80">
+                        <CloudImage className="absolute top-[5%] left-[2%] w-64 opacity-40 animate-float" />
+                        <div className="absolute top-[10%] -left-40 animate-fly-crane w-[500px] h-[500px]">
                             <CraneVideo className="w-full h-full" style={{ transform: 'scaleX(-1)' }} />
                         </div>
                     </div>
 
-                    {/* 首頁 */}
+                    {/* 首頁佈局 */}
                     {view === 'intro' && (
                         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center px-6 animate-fade-in">
-                            <div className="mb-12 text-center">
-                                <span className="text-yellow-400 text-sm tracking-[0.5em] uppercase block mb-4 font-bold">Gold Horse Fortune</span>
-                                <h1 className="text-6xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#FCD34D] to-[#B45309] tracking-[0.2em] drop-shadow-xl font-serif">金馬鴻運</h1>
-                                <h2 className="text-5xl md:text-6xl font-bold text-[#FCD34D] mt-2 drop-shadow-lg font-serif">聚福堂</h2>
+                            <div className="mb-16 text-center">
+                                <span className="text-yellow-400 text-sm tracking-[0.6em] uppercase block mb-4 font-bold opacity-80">Gold Horse Fortune</span>
+                                <h1 className="text-7xl md:text-9xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#FCD34D] to-[#B45309] tracking-[0.2em] drop-shadow-xl">金馬鴻運</h1>
+                                <h2 className="text-5xl md:text-6xl font-bold text-[#FCD34D] mt-2 drop-shadow-lg opacity-90">聚福堂</h2>
                             </div>
 
-                            <div className="relative w-full max-w-sm px-6">
-                                <div className="absolute -inset-1 bg-gradient-to-r from-[#FCD34D] to-[#B45309] rounded-2xl blur opacity-30"></div>
-                                <div className="relative bg-white/10 backdrop-blur-xl border-2 border-[#FCD34D]/60 p-8 rounded-xl shadow-2xl flex flex-col items-center gap-6 pt-10">
-                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#5c0b0b] px-6 py-1 rounded-full border border-[#FCD34D] shadow-lg z-10 whitespace-nowrap">
-                                        <span className="text-[#FCD34D] text-sm font-bold tracking-widest uppercase font-serif">誠心祈求 · 靈籤指引</span>
+                            <div className="relative w-full max-w-sm">
+                                <div className="absolute -inset-2 bg-gradient-to-r from-[#FCD34D] to-[#B45309] rounded-3xl blur-lg opacity-20"></div>
+                                <div className="relative bg-white/5 backdrop-blur-2xl border-2 border-[#FCD34D]/40 p-12 rounded-2xl shadow-2xl flex flex-col items-center gap-10 text-center">
+                                    <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-[#5c0b0b] px-10 py-2 rounded-full border-2 border-[#FCD34D] shadow-lg z-10 whitespace-nowrap">
+                                        <span className="text-[#FCD34D] text-lg font-bold tracking-widest uppercase">誠心祈求 · 靈籤指引</span>
                                     </div>
-                                    <form onSubmit={processSelection} className="w-full flex flex-col gap-6">
-                                        <input type="number" placeholder="輸入籤號 (1-64)" value={hexNum} onChange={(e) => setHexNum(e.target.value)} className="w-full bg-black/40 border border-[#FCD34D]/30 text-[#FCD34D] text-3xl text-center py-4 rounded-lg focus:outline-none focus:border-[#FCD34D] placeholder:text-yellow-500/20 font-serif" autoFocus />
-                                        <button type="submit" disabled={isLoading} className="w-full bg-gradient-to-r from-[#B45309] to-[#D97706] text-white py-4 rounded-lg text-2xl font-bold shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-all font-serif">
+                                    <form onSubmit={processSelection} className="w-full flex flex-col gap-10">
+                                        <input type="number" placeholder="輸入籤號 (1-64)" value={hexNum} onChange={(e) => setHexNum(e.target.value)} className="w-full bg-black/60 border-2 border-[#FCD34D]/30 text-[#FCD34D] text-5xl text-center py-6 rounded-xl focus:outline-none focus:border-[#FCD34D] placeholder:text-yellow-900/30" autoFocus />
+                                        <button type="submit" disabled={isLoading} className="w-full bg-gradient-to-r from-[#B45309] to-[#D97706] text-white py-6 rounded-xl text-3xl font-bold shadow-2xl flex items-center justify-center gap-4 active:scale-95 transition-all">
                                             {isLoading ? <Icon name="refresh-cw" className="animate-spin" /> : <Icon name="sparkles" />}
                                             開啟鴻運
                                         </button>
@@ -311,22 +245,20 @@
                     {view === 'animating' && (
                         <div className="absolute inset-0 z-150 flex items-end justify-center overflow-hidden perspective-container">
                             <div className="relative w-full max-w-[800px] h-full flex items-end justify-center">
-                                <div className={`absolute inset-0 bg-white/20 z-0 transition-opacity duration-1000 ${showFlash ? 'opacity-100' : 'opacity-0'}`}>
-                                    <div className="w-full h-full animate-burst"></div>
-                                </div>
-                                <div className="w-1/2 h-full bg-[#3e0000] border-r-2 border-black/40 z-10 relative flex flex-col items-center pt-32 shadow-2xl origin-left animate-door-left" 
-                                     style={{transformStyle: 'preserve-3d', backgroundImage: 'url(https://www.transparenttextures.com/patterns/wood-pattern.png)'}}>
+                                <div className={`absolute inset-0 bg-white/30 z-0 transition-opacity duration-1500 ${showFlash ? 'opacity-100' : 'opacity-0'}`}></div>
+                                <div className="w-1/2 h-full bg-[#3e0000] border-r-2 border-black/40 z-10 relative flex flex-col items-center pt-32 origin-left animate-door-l" 
+                                     style={{backgroundImage: 'url(https://www.transparenttextures.com/patterns/wood-pattern.png)'}}>
                                     <div className="grid grid-cols-3 gap-8 mb-12 opacity-80">
-                                        {[...Array(9)].map((_,i) => <div key={i} className="w-4 h-4 rounded-full bg-gradient-to-br from-[#FCD34D] to-[#B45309] border border-[#B45309]/30 shadow-md"></div>)}
+                                        {[...Array(9)].map((_,i) => <div key={i} className="w-6 h-6 rounded-full bg-gradient-to-br from-[#FCD34D] to-[#B45309]"></div>)}
                                     </div>
                                     <div className="w-24 h-24 rounded-full border-4 border-[#B45309] flex items-center justify-center bg-[#5c0b0b] shadow-lg absolute right-4 top-1/2 -translate-y-1/2">
                                         <div className="w-16 h-16 rounded-full border-2 border-[#FCD34D]/50"></div>
                                     </div>
                                 </div>
-                                <div className="w-1/2 h-full bg-[#3e0000] border-l-2 border-black/40 z-10 relative flex flex-col items-center pt-32 shadow-2xl origin-right animate-door-right"
-                                     style={{transformStyle: 'preserve-3d', backgroundImage: 'url(https://www.transparenttextures.com/patterns/wood-pattern.png)'}}>
+                                <div className="w-1/2 h-full bg-[#3e0000] border-l-2 border-black/40 z-10 relative flex flex-col items-center pt-32 origin-right animate-door-r"
+                                     style={{backgroundImage: 'url(https://www.transparenttextures.com/patterns/wood-pattern.png)'}}>
                                     <div className="grid grid-cols-3 gap-8 mb-12 opacity-80">
-                                        {[...Array(9)].map((_,i) => <div key={i} className="w-4 h-4 rounded-full bg-gradient-to-br from-[#FCD34D] to-[#B45309] border border-[#B45309]/30 shadow-md"></div>)}
+                                        {[...Array(9)].map((_,i) => <div key={i} className="w-6 h-6 rounded-full bg-gradient-to-br from-[#FCD34D] to-[#B45309]"></div>)}
                                     </div>
                                     <div className="w-24 h-24 rounded-full border-4 border-[#B45309] flex items-center justify-center bg-[#5c0b0b] shadow-lg absolute left-4 top-1/2 -translate-y-1/2">
                                         <div className="w-16 h-16 rounded-full border-2 border-[#FCD34D]/50"></div>
@@ -336,50 +268,50 @@
                         </div>
                     )}
 
-                    {/* 解籤結果頁 */}
+                    {/* 解籤結果頁面 */}
                     {view === 'result' && selectedHex && (
                         <div className="absolute inset-0 z-[60] bg-[#F5F5F0] text-[#2a0a0a] overflow-y-auto animate-fade-in custom-scrollbar">
-                            <div className="max-w-4xl mx-auto p-6 md:p-8 flex flex-col items-center pb-40">
-                                <div className="w-full flex justify-start mb-6 sticky top-0 bg-[#F5F5F0]/90 backdrop-blur-sm py-2 z-20">
-                                    <button onClick={reset} className="flex items-center gap-2 text-[#7F1D1D] font-bold transition-transform hover:-translate-x-1">
-                                        <Icon name="chevron-left" /> 重返聚福堂
+                            <div className="max-w-5xl mx-auto p-6 md:p-12 flex flex-col items-center pb-48">
+                                <div className="w-full flex justify-start mb-10 sticky top-0 bg-[#F5F5F0]/90 backdrop-blur-md py-6 z-20 border-b border-[#D4C4B7]">
+                                    <button onClick={reset} className="flex items-center gap-4 text-[#991B1B] font-bold text-2xl hover:-translate-x-2 transition-transform">
+                                        <Icon name="chevron-left" size={32} /> 重返聚福堂
                                     </button>
                                 </div>
-                                <div className="bg-white rounded-xl shadow-2xl border w-full flex flex-col items-center relative overflow-hidden">
-                                    <div className="h-14 bg-[#991B1B] absolute top-0 left-0 w-full flex items-center justify-around px-10 overflow-hidden relative">
-                                        <GoldenCloudImg className="absolute inset-0 w-full h-full opacity-20 scale-125" />
-                                        {[...Array(6)].map((_, i) => <Icon key={i} name="sparkles" className="text-yellow-500/20" size={16} />)}
+                                <div className="bg-white rounded-[40px] shadow-2xl border-4 border-white w-full flex flex-col items-center relative overflow-hidden">
+                                    {/* 頂部紅區：祥雲圖片 */}
+                                    <div className="h-20 bg-[#991B1B] absolute top-0 left-0 w-full flex items-center justify-around px-10 overflow-hidden relative">
+                                        <CloudImage className="absolute inset-0 w-full h-full opacity-30" style={{objectFit: 'cover'}} />
+                                        {[...Array(6)].map((_, i) => <Icon key={i} name="sparkles" className="text-yellow-500/20" size={20} />)}
                                     </div>
                                     
-                                    <div className="p-14 flex flex-col items-center relative z-10 w-full">
-                                        <div className="absolute inset-0 z-0 opacity-[0.15] pointer-events-none overflow-hidden flex items-center justify-center">
+                                    <div className="p-16 flex flex-col items-center relative z-10 w-full">
+                                        <div className="absolute inset-0 z-0 opacity-[0.12] pointer-events-none overflow-hidden flex items-center justify-center">
                                             <CraneVideo className="w-full h-full scale-150" />
                                         </div>
-
-                                        <div className="w-40 h-40 rounded-full border-4 border-[#B45309]/20 flex items-center justify-center bg-[#FFFBEB] text-8xl text-[#991B1B] mb-8 shadow-inner relative z-10 font-serif">
+                                        <div className="w-56 h-56 rounded-full border-8 border-yellow-500/10 flex items-center justify-center bg-yellow-50/50 text-[10rem] text-[#991B1B] mb-12 shadow-inner relative z-10">
                                             {selectedHex.id % 2 === 1 ? '☰' : '☷'}
                                         </div>
-                                        <h2 className="text-4xl font-bold mb-2 text-center text-[#2C0A0A] font-serif z-10">{selectedHex.name} · {selectedHex.meaning}</h2>
-                                        <p className="text-[#B45309] italic text-lg mb-8 text-center z-10 font-serif">「{selectedHex.image}」</p>
-                                        <div className="w-full bg-[#FAFAF9]/90 backdrop-blur-sm p-6 rounded-lg border-l-4 border-[#B45309] mb-8 text-xl leading-loose font-serif z-10 shadow-sm">{selectedHex.text}</div>
-                                        <div className="w-full space-y-4 text-left z-10 font-serif">
-                                            <h3 className="font-bold text-[#7F1D1D] text-lg border-b pb-2 font-serif flex items-center gap-2">
-                                                <Icon name="book-open" size={20} /> 六爻詳解
-                                            </h3>
+                                        <h2 className="text-6xl font-bold mb-4 text-center text-[#2C0A0A] font-serif z-10">{selectedHex.name} · {selectedHex.meaning}</h2>
+                                        <p className="text-[#B45309] italic text-3xl mb-16 text-center z-10 font-serif">「{selectedHex.image}」</p>
+                                        <div className="w-full bg-[#FAFAF9]/80 backdrop-blur-sm p-10 rounded-3xl border-l-[12px] border-[#B45309] mb-16 text-4xl leading-relaxed font-serif z-10 shadow-sm">{selectedHex.text}</div>
+                                        <div className="w-full space-y-6 text-left z-10 font-serif text-2xl">
+                                            <h3 className="font-bold text-[#7F1D1D] border-b-2 border-[#D4C4B7] pb-3 mb-8">六爻詳解</h3>
                                             {selectedHex.lines.map((line, idx) => (
-                                                <div key={idx} className="flex gap-4 p-3 border-b border-gray-100 text-gray-700 hover:bg-gray-50 transition-colors font-serif text-lg">
-                                                    <span className="font-bold text-[#991B1B] min-w-[3.5rem]">{line.split('：')[0]}</span>
+                                                <div key={idx} className="flex gap-10 p-6 border-b border-gray-100 text-gray-700 hover:bg-gray-50 transition-colors">
+                                                    <span className="font-bold text-[#991B1B] min-w-[6rem]">{line.split('：')[0]}</span>
                                                     <span>{line.split('：')[1] || line}</span>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="h-4 bg-[#991B1B] w-full"></div>
+                                    <div className="h-8 bg-[#991B1B] w-full flex items-center justify-around overflow-hidden relative">
+                                        <CloudImage className="absolute inset-0 w-full h-full opacity-30 rotate-180" style={{objectFit: 'cover'}} />
+                                    </div>
                                 </div>
                             </div>
-                            <div className="fixed bottom-0 left-0 w-full p-6 bg-[#F5F5F0]/90 backdrop-blur border-t z-[70] flex justify-center pb-8 safe-area-pb">
-                                <button onClick={() => setView('card')} className="w-full max-w-lg bg-gradient-to-r from-[#B45309] to-[#D97706] text-white py-5 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 text-2xl active:scale-95 transition-all font-serif">
-                                    <Icon name="camera" size={28} /> 領取福卡
+                            <div className="fixed bottom-0 left-0 w-full p-10 bg-[#F5F5F0]/95 backdrop-blur-xl border-t-2 border-[#D4C4B7] z-[70] flex justify-center pb-14">
+                                <button onClick={() => setView('card')} className="w-full max-w-lg bg-gradient-to-r from-[#B45309] to-[#D97706] text-white py-8 rounded-[2rem] font-bold shadow-xl flex items-center justify-center gap-4 text-4xl active:scale-95 transition-all animate-card-glow">
+                                    <Icon name="camera" size={36} /> 領取福卡
                                 </button>
                             </div>
                         </div>
@@ -388,52 +320,60 @@
                     {/* 福卡頁面 */}
                     {view === 'card' && selectedHex && (
                         <div className="absolute inset-0 z-[70] flex flex-col items-center justify-center p-4 animate-fade-in overflow-y-auto">
-                            <div className="absolute inset-0 bg-black/75 backdrop-blur-xl z-0"></div>
+                            <div className="absolute inset-0 bg-black/85 backdrop-blur-2xl z-0"></div>
                             
-                            <div className="relative z-10 w-full max-w-md paper-texture rounded-3xl overflow-hidden shadow-2xl border-[10px] border-[#B45309] animate-card-glow shrink-0 flex flex-col">
-                                <div className="absolute inset-2 border border-[#B45309]/20 rounded-2xl pointer-events-none z-20"></div>
-                                <CornerDecor className="absolute top-4 left-4 w-10 h-10 z-30 opacity-70" />
-                                <CornerDecor className="absolute top-4 right-4 w-10 h-10 z-30 rotate-90 opacity-70" />
-                                <CornerDecor className="absolute bottom-4 left-4 w-10 h-10 z-30 -rotate-90 opacity-70" />
-                                <CornerDecor className="absolute bottom-4 right-4 w-10 h-10 z-30 rotate-180 opacity-70" />
+                            <div className="relative z-10 w-full max-w-lg paper-bg rounded-[50px] overflow-hidden shadow-2xl border-[15px] border-[#B45309] animate-card-glow shrink-0 flex flex-col">
+                                <div className="absolute inset-4 border border-[#B45309]/30 rounded-[35px] pointer-events-none z-20"></div>
+                                <CornerDecor className="absolute top-10 left-10 w-16 h-16 z-30 opacity-70" />
+                                <CornerDecor className="absolute top-10 right-10 w-16 h-16 z-30 rotate-90 opacity-70" />
+                                <CornerDecor className="absolute bottom-10 left-10 w-16 h-16 z-30 -rotate-90 opacity-70" />
+                                <CornerDecor className="absolute bottom-10 right-10 w-16 h-16 z-30 rotate-180 opacity-70" />
 
-                                <div className="bg-gradient-to-br from-[#991B1B] via-[#DC2626] to-[#991B1B] p-10 text-center text-white relative shadow-inner overflow-hidden border-b-2 border-yellow-600/30">
-                                    <GoldenCloudImg className="absolute -top-10 -left-16 w-[350px] h-[220px] opacity-40 animate-float-slow" />
-                                    <GoldenCloudImg className="absolute -bottom-10 -right-20 w-[350px] h-[220px] opacity-40 animate-float-slower" />
+                                {/* 紅色標頭：祥雲圖片 */}
+                                <div className="bg-gradient-to-br from-[#991B1B] via-[#DC2626] to-[#991B1B] p-16 text-center text-white relative shadow-inner overflow-hidden border-b-4 border-yellow-600/40">
+                                    <CloudImage className="absolute -top-10 -left-16 w-80 opacity-50 animate-float" />
+                                    <CloudImage className="absolute -bottom-10 -right-16 w-80 opacity-50 animate-float rotate-180" style={{animationDelay: '-3s'}} />
                                     
-                                    <div className="text-yellow-400 text-xs tracking-[0.6em] mb-4 uppercase font-bold opacity-80 z-10 font-serif text-center">Golden Horse Fortune Card</div>
-                                    <div className="w-20 h-20 mx-auto rounded-full border-2 border-yellow-400 flex items-center justify-center bg-white/10 backdrop-blur-sm mb-4 shadow-lg z-10 font-serif">
-                                        <span className="text-5xl pt-1">{selectedHex.id % 2 === 1 ? '☰' : '☷'}</span>
+                                    <div className="text-yellow-400 text-sm tracking-[1.2em] mb-6 uppercase font-bold opacity-80 z-10">Fortune Card</div>
+                                    <div className="w-28 h-28 mx-auto rounded-full border-4 border-yellow-400 flex items-center justify-center bg-white/10 backdrop-blur-md mb-8 shadow-2xl z-10">
+                                        <span className="text-7xl pt-2 font-serif">{selectedHex.id % 2 === 1 ? '☰' : '☷'}</span>
                                     </div>
-                                    <h1 className="text-5xl font-bold mb-2 tracking-widest font-serif z-10">{selectedHex.name}</h1>
-                                    <p className="text-xl text-yellow-300 font-bold z-10 font-serif">{selectedHex.lucky || "吉星高照"}</p>
+                                    <h1 className="text-7xl font-bold mb-4 tracking-widest font-serif z-10 drop-shadow-lg">{selectedHex.name}</h1>
+                                    <p className="text-3xl text-yellow-300 font-bold z-10 font-serif tracking-[0.3em]">{selectedHex.lucky || "吉星高照"}</p>
                                 </div>
 
-                                <div className="relative p-10 min-h-[400px] flex flex-col items-center justify-center text-center">
-                                    <div className="absolute inset-0 z-0 opacity-[0.45] pointer-events-none overflow-hidden flex items-center justify-center">
-                                        <CraneVideo className="w-full h-full scale-[2.2]" style={{ transform: 'scaleX(-1)' }} />
+                                {/* 白色底：白鶴 */}
+                                <div className="relative p-16 min-h-[500px] flex flex-col items-center justify-center text-center">
+                                    <div className="absolute inset-0 z-0 opacity-[0.5] pointer-events-none overflow-hidden flex items-center justify-center">
+                                        <CraneVideo className="w-full h-full scale-[2.5]" style={{ transform: 'scaleX(-1)' }} />
                                     </div>
                                     <div className="relative z-10 w-full font-serif">
-                                        <div className="text-[#991B1B] text-sm mb-6 tracking-[0.3em] font-bold font-serif">— 崇正寶宮靈籤指引 —</div>
-                                        <div className="text-gray-800 font-serif leading-relaxed text-2xl py-8 px-4 border-y-2 border-[#B45309]/10 bg-white/40 rounded-xl shadow-inner backdrop-blur-[2px]">
+                                        <div className="text-[#991B1B] text-2xl mb-10 tracking-[0.5em] font-bold">— 崇正寶宮 · 靈籤指引 —</div>
+                                        <div className="text-gray-900 font-serif leading-relaxed text-4xl py-14 px-10 border-y-4 border-[#B45309]/10 bg-white/50 rounded-3xl shadow-inner backdrop-blur-[2px]">
                                             {selectedHex.text}
                                         </div>
                                     </div>
-                                    <div className="relative z-10 flex justify-between items-end w-full mt-12 px-2">
-                                        <div className="text-left text-[#B45309]/70 font-serif border-l-2 border-[#B45309]/30 pl-4">
-                                            <p className="text-[10px] uppercase tracking-widest mb-1 font-bold">Lottery Date</p>
-                                            <p className="font-bold text-gray-700 text-lg">{new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                    <div className="relative z-10 flex justify-between items-end w-full mt-20 px-4">
+                                        <div className="text-left text-[#B45309] font-serif border-l-4 border-[#B45309]/40 pl-8">
+                                            <p className="text-xs uppercase tracking-widest mb-2 font-bold opacity-60">Authentication Date</p>
+                                            <p className="font-bold text-gray-800 text-3xl">{new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                                         </div>
-                                        <div className="transform rotate-[-8deg] hover:rotate-0 transition-transform duration-500">
-                                            <PalaceSeal className="w-24 h-24 shadow-[5px_5px_15px_rgba(185,28,28,0.3)]" />
+                                        <div className="transform rotate-[-12deg] hover:rotate-0 transition-all duration-700 hover:scale-110">
+                                            <PalaceSeal className="w-36 h-36 shadow-2xl" />
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <button onClick={reset} className="relative z-10 mt-8 bg-gradient-to-r from-[#B45309] to-[#D97706] text-white px-10 py-4 rounded-full font-bold shadow-lg flex items-center gap-2 text-lg active:scale-95 transition-all font-serif">
-                                <Icon name="rotate-ccw" size={20} /> 再求一支
-                            </button>
-                            <button onClick={() => setView('result')} className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors p-2"><Icon name="x" size={32} /></button>
+                            
+                            <div className="mt-16 flex flex-col gap-8 w-full max-w-sm relative z-20">
+                                <button onClick={reset} className="w-full bg-gradient-to-r from-[#B45309] to-[#D97706] text-white px-10 py-6 rounded-full font-bold shadow-2xl flex items-center justify-center gap-4 text-3xl active:scale-95 transition-all">
+                                    <Icon name="rotate-ccw" size={32} /> 再求一支靈籤
+                                </button>
+                                <button onClick={() => setView('result')} className="text-yellow-500 hover:text-yellow-300 text-2xl font-bold transition-all opacity-80 hover:opacity-100 flex items-center justify-center gap-2">
+                                    <Icon name="chevron-left" /> 返回解籤
+                                </button>
+                            </div>
+                            <button onClick={() => setView('result')} className="absolute top-12 right-12 text-white/40 hover:text-white transition-colors p-4 bg-white/5 rounded-full backdrop-blur-sm border border-white/10"><Icon name="x" size={40} /></button>
                         </div>
                     )}
                 </div>
