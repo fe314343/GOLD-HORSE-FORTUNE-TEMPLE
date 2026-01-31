@@ -32,17 +32,10 @@
             filter: brightness(1.2) contrast(1.1);
         }
 
-        /* --- 動畫定義 --- */
+        /* --- 基本動畫 --- */
         @keyframes float-slow { 
             0%, 100% { transform: translate(0, 0); } 
             50% { transform: translate(15px, -10px); } 
-        }
-        
-        @keyframes fly-across { 
-            0% { transform: translateX(-40vw) translateY(0) scale(0.7); opacity: 0; }
-            15% { opacity: 0.8; }
-            85% { opacity: 0.8; }
-            100% { transform: translateX(140vw) translateY(-10vh) scale(1) opacity: 0; } 
         }
 
         @keyframes door-left-open { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(-110deg); } }
@@ -51,7 +44,6 @@
         @keyframes card-glow { 0%, 100% { box-shadow: 0 0 20px rgba(252, 211, 77, 0.2); } 50% { box-shadow: 0 0 40px rgba(252, 211, 77, 0.4); } }
 
         .animate-float { animation: float-slow 12s ease-in-out infinite; }
-        .animate-fly-crane { animation: fly-across 20s linear infinite; }
         .animate-door-l { animation: door-left-open 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
         .animate-door-r { animation: door-right-open 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
         .animate-fade-in { animation: fade-in 0.6s ease-out forwards; }
@@ -78,7 +70,6 @@
 
         // --- 資源路徑設定 ---
         const BGM_URL = './assets/bgm.mp3'; 
-        const CRANE_VIDEO_URL = './assets/crane.mp4';
         const CLOUD_IMAGE_URL = './assets/cloud.png';
 
         // --- 卦象資料庫 ---
@@ -119,12 +110,6 @@
 
         const CloudImage = ({ className, style }) => (
             <img src={CLOUD_IMAGE_URL} alt="祥雲" className={`${className} transparent-media`} style={{...style, objectFit: 'contain'}} />
-        );
-
-        const CraneVideo = ({ className, style }) => (
-            <video className={`${className} transparent-media`} autoPlay loop muted playsInline style={{ ...style, objectFit: 'contain' }}>
-                <source src={CRANE_VIDEO_URL} type="video/mp4" />
-            </video>
         );
 
         const CornerDecor = ({ className }) => (
@@ -224,9 +209,6 @@
                         <CloudImage className="absolute top-[5%] left-[2%] w-64 md:w-96 opacity-40 animate-float" />
                         <CloudImage className="absolute top-[40%] right-[-10%] w-64 md:w-80 opacity-30 animate-float" style={{animationDelay: '4s'}} />
                         <CloudImage className="absolute bottom-[5%] left-[5%] w-72 md:w-96 opacity-40 animate-float" style={{animationDelay: '6s'}} />
-                        <div className="absolute top-[10%] -left-40 animate-fly-crane w-[500px] h-[500px]">
-                            <CraneVideo className="w-full h-full" style={{ transform: 'scaleX(-1)' }} />
-                        </div>
                     </div>
 
                     {/* 首頁介面 */}
@@ -373,10 +355,10 @@
                             </div>
                             
                             <div className="mt-8 flex flex-col gap-4 w-[92%] max-w-[300px] relative z-20 text-yellow-50">
-                                <button onClick={reset} className="w-full bg-gradient-to-r from-[#B45309] to-[#D97706] text-white px-8 py-4 rounded-full font-bold shadow-xl flex items-center justify-center gap-3 text-xl active:scale-95 transition-all">
+                                <button onClick={reset} className="w-full bg-gradient-to-r from-[#B45309] to-[#D97706] text-white px-8 py-4 rounded-full font-bold shadow-xl flex items-center justify-center gap-3 text-xl active:scale-95 transition-all font-serif">
                                     <Icon name="rotate-ccw" size={24} /> 再求一支靈籤
                                 </button>
-                                <button onClick={() => setView('result')} className="text-yellow-500/80 hover:text-yellow-300 text-lg font-bold transition-all">返回解籤</button>
+                                <button onClick={() => setView('result')} className="text-yellow-500/80 hover:text-yellow-300 text-lg font-bold transition-all font-serif">返回解籤</button>
                             </div>
                             <button onClick={() => setView('result')} className="absolute top-6 right-6 text-white/40 p-2"><Icon name="x" size={32} /></button>
                         </div>
