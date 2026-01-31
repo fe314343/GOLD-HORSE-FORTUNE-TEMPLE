@@ -26,24 +26,12 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #D4C4B7; border-radius: 3px; }
 
         /* --- 核心去背技術：濾色模式 --- */
-        /* 過濾黑色背景，讓主體透明顯示，並能適應任何背景顏色 */
         .transparent-media {
             mix-blend-mode: screen; 
             filter: brightness(1.2) contrast(1.1);
         }
 
-        /* --- 白鶴循環飛行邏輯 --- */
-        /* 先從左至中淡出，再從右至中淡出 */
-        @keyframes crane-fly-logic {
-            0% { transform: translate(-30vw, 20vh) scale(0.6); opacity: 0; }
-            20% { transform: translate(35vw, 10vh) scale(1); opacity: 1; }
-            45% { transform: translate(35vw, 10vh) scale(1.1); opacity: 0; }
-            50% { transform: translate(110vw, 20vh) scale(0.6) scaleX(-1); opacity: 0; }
-            70% { transform: translate(35vw, 15vh) scale(1) scaleX(-1); opacity: 1; }
-            95% { transform: translate(35vw, 15vh) scale(1.1) scaleX(-1); opacity: 0; }
-            100% { transform: translate(-30vw, 20vh) scale(0.6); opacity: 0; }
-        }
-
+        /* --- 基本動畫 --- */
         @keyframes float-slow { 
             0%, 100% { transform: translate(0, 0); } 
             50% { transform: translate(30px, -20px); } 
@@ -55,7 +43,6 @@
         @keyframes card-glow { 0%, 100% { box-shadow: 0 0 30px rgba(252, 211, 77, 0.2); } 50% { box-shadow: 0 0 60px rgba(252, 211, 77, 0.4); } }
 
         .animate-float { animation: float-slow 12s ease-in-out infinite; }
-        .animate-crane-logic { animation: crane-fly-logic 35s linear infinite; }
         .animate-door-l { animation: door-left-open 3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
         .animate-door-r { animation: door-right-open 3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
         .animate-fade-in { animation: fade-in 0.8s ease-out forwards; }
@@ -77,7 +64,6 @@
 
         // --- 資源路徑設定 ---
         const BGM_URL = './assets/bgm.mp3'; 
-        const CRANE_VIDEO_URL = './assets/crane.mp4';
         const CLOUD_IMAGE_URL = './assets/cloud.png';
 
         // --- 卦象資料庫 ---
@@ -105,13 +91,6 @@
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
             return <i data-lucide={name} style={{ width: size, height: size }} className={className}></i>;
         };
-
-        // 修改：白鶴移除背景背景，完全適應父級背景色
-        const CraneVideo = ({ className, style }) => (
-            <video className={`${className} transparent-media`} autoPlay loop muted playsInline style={{ ...style, objectFit: 'contain' }}>
-                <source src={CRANE_VIDEO_URL} type="video/mp4" />
-            </video>
-        );
 
         const PalaceSeal = ({ className }) => (
             <svg viewBox="0 0 100 100" className={className}>
@@ -156,7 +135,7 @@
 
             const handleStart = () => {
                 if (bgmRef.current) {
-                    bgmRef.current.play().then(() => setIsMusicPlaying(true)).catch(e => console.warn("音訊播放需操作"));
+                    bgmRef.current.play().then(() => setIsMusicPlaying(true)).catch(e => console.warn("音訊播放受限"));
                 }
                 setView('intro');
             };
@@ -200,8 +179,8 @@
                     {/* 歡迎畫面 */}
                     {view === 'welcome' && (
                         <div className="absolute inset-0 z-[200] flex flex-col items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in text-center px-4 overflow-hidden">
-                            <CloudImage className="absolute top-[8%] left-[5%] w-[500px] opacity-30 animate-float" />
-                            <CloudImage className="absolute bottom-[8%] right-[5%] w-[500px] opacity-30 animate-float" style={{animationDelay: '-5s'}} />
+                            <CloudImage className="absolute top-[8%] left-[5%] w-[500px] opacity-40 animate-float" />
+                            <CloudImage className="absolute bottom-[8%] right-[5%] w-[500px] opacity-40 animate-float" style={{animationDelay: '-5s'}} />
                             <div className="mb-12 relative z-10">
                                 <h1 className="text-7xl md:text-9xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#FCD34D] to-[#B45309] tracking-[0.2em] drop-shadow-2xl">金馬鴻運</h1>
                                 <p className="text-yellow-200/80 tracking-[0.5em] text-2xl mt-6 uppercase">崇正寶宮 · 靈籤指引</p>
@@ -219,16 +198,13 @@
                         </button>
                     )}
 
-                    {/* 首頁裝飾層：白鶴與祥雲 */}
+                    {/* 首頁裝飾層：純祥雲 */}
                     <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
                         <CloudImage className="absolute top-[5%] left-[2%] w-96 opacity-50 animate-float" />
                         <CloudImage className="absolute top-[35%] right-[8%] w-[320px] opacity-40 animate-float" style={{animationDelay: '4s'}} />
                         <CloudImage className="absolute bottom-[10%] right-[3%] w-[450px] opacity-50 animate-float" style={{animationDelay: '7s'}} />
-                        
-                        {/* 白鶴動畫修正：左右循環飛行並淡出 */}
-                        <div className="absolute inset-0 animate-crane-logic">
-                            <CraneVideo className="w-[500px] h-[300px]" />
-                        </div>
+                        <CloudImage className="absolute top-[65%] left-[6%] w-[300px] opacity-40 animate-float" style={{animationDelay: '2s'}} />
+                        <CloudImage className="absolute top-[12%] right-[20%] w-[380px] opacity-40 animate-float" style={{animationDelay: '10s'}} />
                     </div>
 
                     {/* 首頁佈局 */}
@@ -242,13 +218,13 @@
 
                             <div className="relative w-full max-w-sm">
                                 <div className="absolute -inset-1 bg-gradient-to-r from-[#FCD34D] to-[#B45309] rounded-3xl blur-lg opacity-20"></div>
-                                <div className="relative bg-white/5 backdrop-blur-xl border-2 border-[#FCD34D]/60 p-10 rounded-xl shadow-2xl flex flex-col items-center gap-10 text-center text-yellow-50">
+                                <div className="relative bg-white/5 backdrop-blur-xl border-2 border-[#FCD34D]/60 p-10 rounded-xl shadow-2xl flex flex-col items-center gap-10 text-center">
                                     <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-[#5c0b0b] px-10 py-2 rounded-full border border-[#FCD34D] shadow-lg z-10 whitespace-nowrap">
                                         <span className="text-[#FCD34D] text-lg font-bold tracking-widest uppercase">誠心祈求 · 靈籤指引</span>
                                     </div>
                                     <form onSubmit={processSelection} className="w-full flex flex-col gap-10">
                                         <input type="number" placeholder="輸入籤號 (1-64)" value={hexNum} onChange={(e) => setHexNum(e.target.value)} className="w-full bg-black/60 border border-[#FCD34D]/30 text-[#FCD34D] text-5xl text-center py-6 rounded-lg focus:outline-none focus:border-[#FCD34D] placeholder:text-yellow-900/30 font-serif" autoFocus />
-                                        <button type="submit" disabled={isLoading} className="w-full bg-gradient-to-r from-[#B45309] to-[#D97706] text-white py-6 rounded-xl text-3xl font-bold shadow-xl flex items-center justify-center gap-4 active:scale-95 transition-all font-serif">
+                                        <button type="submit" disabled={isLoading} className="w-full bg-gradient-to-r from-[#B45309] to-[#D97706] text-white py-5 rounded-lg text-2xl font-bold shadow-lg flex items-center justify-center gap-4 active:scale-95 transition-all font-serif">
                                             {isLoading ? <Icon name="refresh-cw" className="animate-spin" /> : <Icon name="sparkles" />}
                                             開啟鴻運
                                         </button>
@@ -258,7 +234,7 @@
                         </div>
                     )}
 
-                    {/* 解籤過場 */}
+                    {/* 開門動畫 */}
                     {view === 'animating' && (
                         <div className="absolute inset-0 z-150 flex items-end justify-center overflow-hidden perspective-container">
                             <div className="relative w-full max-w-[800px] h-full flex items-end justify-center transition-transform duration-1000">
@@ -285,7 +261,7 @@
                         </div>
                     )}
 
-                    {/* 結果頁面：增加頂部祥雲 */}
+                    {/* 解籤結果頁面 */}
                     {view === 'result' && selectedHex && (
                         <div className="absolute inset-0 z-[60] bg-[#F5F5F0] text-[#2a0a0a] overflow-y-auto animate-fade-in custom-scrollbar">
                             <div className="max-w-4xl mx-auto p-6 md:p-12 flex flex-col items-center pb-48">
@@ -295,20 +271,16 @@
                                     </button>
                                 </div>
                                 <div className="bg-white rounded-[40px] shadow-2xl border-4 border-white w-full flex flex-col items-center relative overflow-hidden">
-                                    {/* 頂部紅區：增加祥雲數量至 4 個 */}
-                                    <div className="h-32 bg-[#991B1B] absolute top-0 left-0 w-full flex items-center justify-around px-4 overflow-hidden relative shadow-inner">
-                                        <CloudImage className="w-48 opacity-40 scale-125" />
-                                        <CloudImage className="w-56 opacity-50 scale-150" />
-                                        <CloudImage className="w-48 opacity-40 scale-125" />
-                                        <CloudImage className="w-40 opacity-30 scale-100 -rotate-12" />
+                                    {/* 頂部紅區：祥雲去背排列 */}
+                                    <div className="h-32 bg-[#991B1B] absolute top-0 left-0 w-full flex items-center justify-around px-8 overflow-hidden relative shadow-inner">
+                                        <CloudImage className="w-48 opacity-50 scale-125" />
+                                        <CloudImage className="w-64 opacity-60 scale-150" />
+                                        <CloudImage className="w-48 opacity-50 scale-125" />
+                                        <CloudImage className="w-40 opacity-40 scale-100 -rotate-12" />
                                         {[...Array(6)].map((_, i) => <Icon key={i} name="sparkles" className="text-yellow-50/20" size={20} />)}
                                     </div>
                                     
                                     <div className="p-16 flex flex-col items-center relative z-10 w-full mt-10">
-                                        {/* 白色區域背景白鶴：適配白色底色 */}
-                                        <div className="absolute inset-0 z-0 opacity-[0.1] pointer-events-none overflow-hidden flex items-center justify-center">
-                                            <CraneVideo className="w-full h-full scale-150" />
-                                        </div>
                                         <div className="w-56 h-56 rounded-full border-8 border-yellow-500/10 flex items-center justify-center bg-yellow-50/50 text-[10rem] text-[#991B1B] mb-12 shadow-inner relative z-10">
                                             {selectedHex.id % 2 === 1 ? '☰' : '☷'}
                                         </div>
@@ -316,7 +288,7 @@
                                         <p className="text-[#B45309] italic text-3xl mb-16 text-center z-10 font-serif">「{selectedHex.image}」</p>
                                         <div className="w-full bg-[#FAFAF9]/90 backdrop-blur-sm p-10 rounded-3xl border-l-[12px] border-[#B45309] mb-16 text-4xl leading-relaxed font-serif z-10 shadow-sm">{selectedHex.text}</div>
                                         <div className="w-full space-y-6 text-left z-10 font-serif text-2xl">
-                                            <h3 className="font-bold text-[#7F1D1D] border-b-2 border-[#D4C4B7] pb-3 mb-8 text-3xl">六爻詳解</h3>
+                                            <h3 className="font-bold text-[#7F1D1D] border-b-2 border-[#D4C4B7] pb-3 mb-8">六爻詳解</h3>
                                             {selectedHex.lines.map((line, idx) => (
                                                 <div key={idx} className="flex gap-10 p-6 border-b border-gray-100 text-gray-700 hover:bg-gray-50 transition-colors">
                                                     <span className="font-bold text-[#991B1B] min-w-[6rem]">{line.split('：')[0]}</span>
@@ -331,8 +303,8 @@
                                 </div>
                             </div>
                             <div className="fixed bottom-0 left-0 w-full p-10 bg-[#F5F5F0]/95 backdrop-blur-xl border-t-2 border-[#D4C4B7] z-[70] flex justify-center pb-14">
-                                <button onClick={() => setView('card')} className="w-full max-w-lg bg-gradient-to-r from-[#B45309] to-[#D97706] text-white py-8 rounded-[2.5rem] font-bold shadow-xl flex items-center justify-center gap-6 text-4xl active:scale-95 transition-all animate-card-glow">
-                                    <Icon name="camera" size={40} /> 領取福卡
+                                <button onClick={() => setView('card')} className="w-full max-w-lg bg-gradient-to-r from-[#B45309] to-[#D97706] text-white py-8 rounded-[2.5rem] font-bold shadow-xl flex items-center justify-center gap-4 text-4xl active:scale-95 transition-all animate-card-glow">
+                                    <Icon name="camera" size={36} /> 領取福卡
                                 </button>
                             </div>
                         </div>
@@ -343,7 +315,7 @@
                         <div className="absolute inset-0 z-[70] flex flex-col items-center justify-center p-4 animate-fade-in overflow-y-auto">
                             <div className="absolute inset-0 bg-black/85 backdrop-blur-2xl z-0"></div>
                             
-                            <div className="relative z-10 w-full max-w-lg paper-bg rounded-[50px] overflow-hidden shadow-2xl border-[15px] border-[#B45309] animate-card-glow shrink-0 flex flex-col">
+                            <div className="relative z-10 w-full max-w-md paper-bg rounded-[50px] overflow-hidden shadow-2xl border-[15px] border-[#B45309] animate-card-glow shrink-0 flex flex-col">
                                 <div className="absolute inset-4 border border-[#B45309]/30 rounded-[35px] pointer-events-none z-20"></div>
                                 <CornerDecor className="absolute top-10 left-10 w-16 h-16 z-30 opacity-70" />
                                 <CornerDecor className="absolute top-10 right-10 w-16 h-16 z-30 rotate-90 opacity-70" />
@@ -351,10 +323,10 @@
                                 <CornerDecor className="absolute bottom-10 right-10 w-16 h-16 z-30 rotate-180 opacity-70" />
 
                                 <div className="bg-gradient-to-br from-[#991B1B] via-[#DC2626] to-[#991B1B] p-16 text-center text-white relative shadow-inner overflow-hidden border-b-4 border-yellow-600/40">
-                                    <CloudImage className="absolute -top-12 -left-20 w-[400px] opacity-50 animate-float" />
-                                    <CloudImage className="absolute -bottom-12 -right-20 w-[400px] opacity-50 animate-float rotate-180" style={{animationDelay: '-3s'}} />
+                                    <CloudImage className="absolute -top-10 -left-16 w-80 opacity-50 animate-float" />
+                                    <CloudImage className="absolute -bottom-10 -right-16 w-80 opacity-50 animate-float rotate-180" style={{animationDelay: '-3s'}} />
                                     
-                                    <div className="text-yellow-400 text-xs tracking-[1.2em] mb-6 uppercase font-bold opacity-80 z-10">Fortune Card</div>
+                                    <div className="text-yellow-400 text-sm tracking-[1.2em] mb-6 uppercase font-bold opacity-80 z-10">Fortune Card</div>
                                     <div className="w-28 h-28 mx-auto rounded-full border-4 border-yellow-400 flex items-center justify-center bg-white/10 backdrop-blur-md mb-8 shadow-2xl z-10 font-serif">
                                         <span className="text-7xl pt-2">{selectedHex.id % 2 === 1 ? '☰' : '☷'}</span>
                                     </div>
@@ -363,10 +335,6 @@
                                 </div>
 
                                 <div className="relative p-16 min-h-[500px] flex flex-col items-center justify-center text-center">
-                                    {/* 福卡去背白鶴 */}
-                                    <div className="absolute inset-0 z-0 opacity-[0.5] pointer-events-none overflow-hidden flex items-center justify-center">
-                                        <CraneVideo className="w-full h-full scale-[2.2]" />
-                                    </div>
                                     <div className="relative z-10 w-full font-serif text-yellow-950">
                                         <div className="text-[#991B1B] text-2xl mb-10 tracking-[0.5em] font-bold">— 崇正寶宮 · 靈籤指引 —</div>
                                         <div className="text-gray-800 font-serif leading-relaxed text-4xl py-14 px-10 border-y-4 border-[#B45309]/10 bg-white/50 rounded-3xl shadow-inner backdrop-blur-[2px]">
@@ -378,7 +346,6 @@
                                             <p className="text-xs uppercase tracking-widest mb-1 font-bold opacity-60">Authentication Date</p>
                                             <p className="font-bold text-gray-800 text-3xl">{new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                                         </div>
-                                        {/* 印章修正：完全端正無旋轉 */}
                                         <div className="transition-all duration-700 hover:scale-110">
                                             <PalaceSeal className="w-36 h-36 shadow-2xl" />
                                         </div>
