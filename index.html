@@ -43,7 +43,7 @@
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes card-glow { 0%, 100% { box-shadow: 0 0 20px rgba(252, 211, 77, 0.2); } 50% { box-shadow: 0 0 40px rgba(252, 211, 77, 0.4); } }
 
-        .animate-float { animation: float-slow 12s ease-in-out infinite; }
+        .animate-float { animation: float-slow 8s ease-in-out infinite; }
         .animate-door-l { animation: door-left-open 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
         .animate-door-r { animation: door-right-open 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
         .animate-fade-in { animation: fade-in 0.6s ease-out forwards; }
@@ -58,7 +58,7 @@
         
         @media (max-width: 640px) {
             .mobile-title { font-size: 3rem !important; }
-            .mobile-subtitle { font-size: 1.5rem !important; }
+            .mobile-subtitle { font-size: 1.2rem !important; }
         }
     </style>
 </head>
@@ -72,12 +72,12 @@
         const BGM_URL = './assets/bgm.mp3'; 
         const CLOUD_IMAGE_URL = './assets/cloud.png';
 
-        // --- 卦象資料庫 ---
+        // --- 卦象資料庫 (已清理所有特殊間隔號) ---
         const hexagramsBase = [
-            { id: 1, name: "乾", symbol: "天", meaning: "剛健中正", text: "元亨利貞。大哉乾元，萬物資始，乃統天。", image: "天行健，君子以自強不息。", lucky: "大展宏圖" },
-            { id: 2, name: "坤", symbol: "地", meaning: "柔順寬容", text: "元亨，利牝馬之貞. 君子有攸往，先迷後得主。", image: "地勢坤，君子以厚德載物。", lucky: "厚德載物" },
-            { id: 63, name: "既濟", symbol: "水火", meaning: "大功告成", text: "亨，小利貞，初吉終亂。", image: "水在火上，既濟；君子以思患而預防之。", lucky: "功德圓滿" },
-            { id: 64, name: "未濟", symbol: "火水", meaning: "未竟之志", text: "亨，小狐汔濟，濡其尾，无攸利。", image: "火在水上，未濟；君子以慎辨物居方。", lucky: "重新出發" }
+            { id: 1, name: "乾卦", meaning: "剛健中正", text: "元亨利貞。大哉乾元，萬物資始，乃統天。", image: "天行健，君子以自強不息。", lucky: "大展宏圖" },
+            { id: 2, name: "坤卦", meaning: "柔順寬容", text: "元亨，利牝馬之貞。君子有攸往，先迷後得主。", image: "地勢坤，君子以厚德載物。", lucky: "厚德載物" },
+            { id: 63, name: "既濟", meaning: "大功告成", text: "亨，小利貞，初吉終亂。", image: "水在火上，既濟；君子以思患而預防之。", lucky: "功德圓滿" },
+            { id: 64, name: "未濟", meaning: "未竟之志", text: "亨，小狐汔濟，濡其尾，無攸利。", image: "火在水上，未濟；君子以慎辨物居方。", lucky: "重新出發" }
         ];
 
         const fullHexagramData = Array.from({ length: 64 }, (_, i) => {
@@ -85,17 +85,20 @@
             const base = hexagramsBase.find(h => h.id === id);
             return base ? {
                 ...base,
-                lines: [`初爻：${base.name}之初，潛心修養。`, `二爻：運勢漸展，利見大人。`, `三爻：謹慎行事，无咎。`, `四爻：或躍在淵，進退有據。`, `五爻：${base.lucky}，位居尊位，大吉。`, `上爻：盛極而衰，盈不可久。`]
+                lines: [`初爻：潛心修養`, `二爻：運勢漸展`, `三爻：謹慎行事`, `四爻：進退有據`, `五爻：大吉大利`, `上爻：慎終如始`]
             } : {
-                id, name: "吉卦", symbol: "運", meaning: "心誠則靈", text: "吉人自有天相，誠心祈求，必有迴響。", image: "厚德載物", lucky: "萬事如意",
-                lines: ["初爻：平安即是福。", "二爻：貴人相助。", "三爻：小有波折。", "四爻：雲開見月。", "五爻：福星高照。", "上爻：知足常樂。"]
+                id, name: "吉卦", meaning: "心誠則靈", text: "吉人自有天相，誠心祈求，必有迴響。", image: "厚德載物", lucky: "萬事如意",
+                lines: ["初爻：平安即是福", "二爻：貴人相助", "三爻：小有波折", "四爻：雲開見月", "五爻：福星高照", "上爻：知足常樂"]
             };
         });
 
         // --- UI 元件 ---
         const Icon = ({ name, size = 24, className = "" }) => {
-            useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
-            return <i data-lucide={name} style={{ width: size, height: size }} className={className}></i>;
+            useEffect(() => { 
+                if (window.lucide) window.lucide.createIcons(); 
+            }, [name, size]);
+            // 使用內嵌樣式並確保單位，解決行動端可能出現的方塊問題
+            return <i data-lucide={name} style={{ width: size + 'px', height: size + 'px', display: 'inline-block' }} className={className}></i>;
         };
 
         const PalaceSeal = ({ className }) => (
@@ -182,14 +185,14 @@
                         <div className="absolute inset-0 bg-gradient-to-b from-[#2C0A0A]/90 via-transparent to-[#2C0A0A]"></div>
                     </div>
 
-                    {/* 歡迎畫面 */}
+                    {/* 歡迎畫面 (已移除所有的特殊點號) */}
                     {view === 'welcome' && (
                         <div className="absolute inset-0 z-[200] flex flex-col items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in text-center px-6 overflow-hidden">
                             <CloudImage className="absolute top-[10%] left-[-10%] w-[120%] opacity-20 animate-float" />
                             <CloudImage className="absolute bottom-[10%] right-[-10%] w-[120%] opacity-20 animate-float" style={{animationDelay: '-4s'}} />
                             <div className="mb-12 relative z-10">
                                 <h1 className="text-5xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#FCD34D] to-[#B45309] tracking-[0.2em] drop-shadow-2xl mobile-title text-yellow-50">金馬鴻運</h1>
-                                <p className="text-yellow-200/80 tracking-[0.4em] text-lg md:text-2xl mt-4 uppercase">崇正寶宮 · 靈籤指引</p>
+                                <p className="text-yellow-200/80 tracking-[0.4em] text-lg md:text-2xl mt-4 uppercase mobile-subtitle">崇正寶宮 - 靈籤指引</p>
                             </div>
                             <button onClick={handleStart} className="px-12 py-5 bg-gradient-to-r from-[#B45309] to-[#D97706] text-white rounded-full text-2xl font-bold shadow-2xl flex items-center gap-4 relative z-10 active:scale-95 transition-all">
                                 <Icon name="music" size={28} /> 進入聚福堂
@@ -216,7 +219,7 @@
                         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center px-4 animate-fade-in">
                             <div className="mb-12 text-center">
                                 <span className="text-yellow-400 text-xs tracking-[0.6em] uppercase block mb-3 font-bold opacity-80">Gold Horse Fortune</span>
-                                <h1 className="text-5xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#FCD34D] to-[#B45309] tracking-[0.1em] drop-shadow-xl mobile-title">金馬鴻運</h1>
+                                <h1 className="text-5xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#FCD34D] to-[#B45309] tracking-[0.1em] drop-shadow-xl mobile-title text-yellow-50">金馬鴻運</h1>
                                 <h2 className="text-3xl md:text-5xl font-bold text-[#FCD34D] mt-1 drop-shadow-lg opacity-90">聚福堂</h2>
                             </div>
 
@@ -224,7 +227,7 @@
                                 <div className="absolute -inset-1 bg-gradient-to-r from-[#FCD34D] to-[#B45309] rounded-2xl blur-md opacity-20"></div>
                                 <div className="relative bg-white/5 backdrop-blur-xl border border-[#FCD34D]/40 p-8 rounded-xl shadow-2xl flex flex-col items-center gap-8 text-center text-yellow-50">
                                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#5c0b0b] px-6 py-1 rounded-full border border-[#FCD34D] shadow-lg z-10 whitespace-nowrap">
-                                        <span className="text-[#FCD34D] text-sm font-bold tracking-widest uppercase">誠心祈求 · 靈籤指引</span>
+                                        <span className="text-[#FCD34D] text-sm font-bold tracking-widest uppercase">誠心祈求 - 靈籤指引</span>
                                     </div>
                                     <form onSubmit={processSelection} className="w-full flex flex-col gap-8">
                                         <input type="number" placeholder="籤號 (1-64)" value={hexNum} onChange={(e) => setHexNum(e.target.value)} className="w-full bg-black/60 border border-[#FCD34D]/30 text-[#FCD34D] text-5xl text-center py-4 rounded-lg focus:outline-none focus:border-[#FCD34D] font-serif" autoFocus />
@@ -265,7 +268,7 @@
                         </div>
                     )}
 
-                    {/* 解籤結果頁面 */}
+                    {/* 解籤結果頁面 (已移除不相容字元) */}
                     {view === 'result' && selectedHex && (
                         <div className="absolute inset-0 z-[60] bg-[#F5F5F0] text-[#2a0a0a] overflow-y-auto animate-fade-in custom-scrollbar text-yellow-950">
                             <div className="w-full max-w-2xl mx-auto p-4 md:p-10 flex flex-col items-center pb-32">
@@ -282,10 +285,8 @@
                                     </div>
                                     
                                     <div className="p-6 md:p-12 flex flex-col items-center relative z-10 w-full">
-                                        <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-[#B45309]/20 flex items-center justify-center bg-[#FFFBEB] text-7xl md:text-8xl text-[#991B1B] mb-6 shadow-inner font-serif">
-                                            {selectedHex.id % 2 === 1 ? '☰' : '☷'}
-                                        </div>
-                                        <h2 className="text-2xl md:text-4xl font-bold mb-2 text-center text-[#2C0A0A] font-serif">{selectedHex.name} · {selectedHex.meaning}</h2>
+                                        {/* 以文字樣式代替 Unicode 符號，確保手機端不報錯 */}
+                                        <h2 className="text-2xl md:text-4xl font-bold mb-2 text-center text-[#2C0A0A] font-serif">{selectedHex.name} - {selectedHex.meaning}</h2>
                                         <p className="text-[#B45309] italic text-base md:text-xl mb-8 text-center">「{selectedHex.image}」</p>
                                         <div className="w-full bg-[#FAFAF9] p-5 rounded-xl border-l-4 border-[#B45309] mb-8 text-xl leading-relaxed font-serif shadow-sm text-gray-800">
                                             {selectedHex.text}
@@ -311,7 +312,7 @@
                         </div>
                     )}
 
-                    {/* 福卡頁面 */}
+                    {/* 福卡頁面 (全面清理特殊符號) */}
                     {view === 'card' && selectedHex && (
                         <div className="absolute inset-0 z-[70] flex flex-col items-center justify-center p-4 animate-fade-in overflow-y-auto">
                             <div className="absolute inset-0 bg-black/85 backdrop-blur-xl z-0"></div>
@@ -327,17 +328,14 @@
                                     <CloudImage className="absolute -top-10 -left-10 w-56 opacity-40 animate-float" />
                                     <CloudImage className="absolute -bottom-10 -right-10 w-56 opacity-40 animate-float rotate-180" style={{animationDelay: '-3s'}} />
                                     
-                                    <div className="text-yellow-400 text-[10px] tracking-[0.5em] mb-4 uppercase font-bold opacity-80 z-10">Fortune Card</div>
-                                    <div className="w-16 h-16 mx-auto rounded-full border-2 border-yellow-400 flex items-center justify-center bg-white/10 backdrop-blur-sm mb-4 shadow-lg z-10">
-                                        <span className="text-4xl pt-1 font-serif text-yellow-50">{selectedHex.id % 2 === 1 ? '☰' : '☷'}</span>
-                                    </div>
-                                    <h1 className="text-5xl font-bold mb-2 tracking-widest font-serif z-10 drop-shadow-lg">{selectedHex.name}</h1>
+                                    <div className="text-yellow-400 text-[10px] tracking-[0.5em] mb-4 uppercase font-bold opacity-80 z-10 font-serif">Fortune Card</div>
+                                    <h1 className="text-5xl font-bold mb-2 tracking-widest font-serif z-10 drop-shadow-lg mt-6">{selectedHex.name}</h1>
                                     <p className="text-xl text-yellow-300 font-bold z-10 font-serif tracking-[0.2em]">{selectedHex.lucky || "吉星高照"}</p>
                                 </div>
 
                                 <div className="relative p-8 min-h-[300px] flex flex-col items-center justify-center text-center">
                                     <div className="relative z-10 w-full font-serif">
-                                        <div className="text-[#991B1B] text-base mb-4 tracking-[0.3em] font-bold">— 崇正寶宮 · 靈籤指引 —</div>
+                                        <div className="text-[#991B1B] text-base mb-4 tracking-[0.3em] font-bold">— 崇正寶宮 靈籤指引 —</div>
                                         <div className="text-gray-900 font-serif leading-relaxed text-2xl py-8 px-4 border-y border-[#B45309]/10 bg-white/50 rounded-2xl shadow-inner">
                                             {selectedHex.text}
                                         </div>
