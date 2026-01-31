@@ -52,7 +52,7 @@
         .perspective-container { perspective: 1000px; }
         .paper-bg {
             background-color: #FFFDF9;
-            //background-image: url("https://www.transparenttextures.com/patterns/handmade-paper.png");
+           /* background-image: url("https://www.transparenttextures.com/patterns/handmade-paper.png");*/
         }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         
@@ -98,7 +98,7 @@
                 if (window.lucide) window.lucide.createIcons(); 
             }, [name, size]);
             // 使用內嵌樣式並確保單位，解決行動端可能出現的方塊問題
-            return <i data-lucide={name} style={{ width: size + 'px', height: size + 'px', display: 'inline-block' }} className={className}></i>;
+           // return <i data-lucide={name} style={{ width: size + 'px', height: size + 'px', display: 'inline-block' }} className={className}></i>;
         };
 
         const PalaceSeal = ({ className }) => (
