@@ -40,13 +40,11 @@
             box-shadow: 2px 2px 5px rgba(0,0,0,0.7);
         }
 
-        /* 3D 門型容器 */
         .gate-perspective {
             perspective: 2000px;
             overflow: hidden;
         }
 
-        /* 旋轉開門動畫 */
         @keyframes swing-left {
             0% { transform: rotateY(0deg); }
             100% { transform: rotateY(-115deg); }
@@ -67,7 +65,6 @@
             animation-delay: 0.2s;
         }
 
-        /* 雲朵漂浮動畫 */
         @keyframes float {
             0% { transform: translate(0, 0); }
             50% { transform: translate(10px, -15px); }
@@ -77,7 +74,6 @@
             animation: float 6s ease-in-out infinite;
         }
         
-        /* 隱藏捲軸 */
         ::-webkit-scrollbar { display: none; }
 
         .paper-texture {
@@ -267,12 +263,14 @@
             "101": ["縱情逐物事紛擾", "放下萬緣一步超"]
         };
 
-        // 元件定義移至外部以避免 hoisting 問題與 Error 130
-        const JustifiedText = ({ text, className }) => {
+        const JustifiedText = ({ text, className, style, poetryLine }) => {
             if (!text) return null;
             const chars = text.split("");
             return (
-                <div className={`flex justify-between w-full select-none whitespace-nowrap ${className}`} style={{ minWidth: '100%' }}>
+                <div 
+                    className={`flex justify-between w-full select-none whitespace-nowrap ${poetryLine ? 'poetry-line' : ''} ${className}`} 
+                    style={{ minWidth: '100%', ...style }}
+                >
                     {chars.map((char, i) => (
                         <span key={i} style={{ display: 'inline-block' }}>{char}</span>
                     ))}
@@ -318,19 +316,15 @@
             useEffect(() => {
                 const today = new Date();
                 setCurrentDate(`${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`);
-                
                 audioRef.current = new Audio('assets/bgm.mp3');
                 audioRef.current.loop = true;
                 doorAudioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2177/2177-preview.mp3');
 
                 const playOnFirstInteraction = () => {
-                    if (audioRef.current && !isMuted) {
-                        audioRef.current.play().catch(() => {});
-                    }
+                    if (audioRef.current && !isMuted) audioRef.current.play().catch(() => {});
                     window.removeEventListener('mousedown', playOnFirstInteraction);
                 };
                 window.addEventListener('mousedown', playOnFirstInteraction);
-
                 return () => {
                     if (audioRef.current) audioRef.current.pause();
                     window.removeEventListener('mousedown', playOnFirstInteraction);
@@ -339,11 +333,7 @@
 
             const toggleMusic = () => {
                 if (!audioRef.current) return;
-                if (isMuted) {
-                    audioRef.current.play();
-                } else {
-                    audioRef.current.pause();
-                }
+                isMuted ? audioRef.current.play() : audioRef.current.pause();
                 setIsMuted(!isMuted);
             };
 
@@ -359,34 +349,114 @@
                 setTimeout(() => setPage('result'), 2800);
             };
 
-            const getPoem = (num) => {
-                const key = parseInt(num).toString();
-                return fortuneData[key] || ["誠心祈求靈感應", "福星高照事皆興", "所求之事皆如意", "心誠則靈顯神明"];
-            };
+            const getPoem = (num) => fortuneData[parseInt(num).toString()] || ["誠心祈求靈感應", "福星高照事皆興", "所求之事皆如意", "心誠則靈顯神明"];
 
-            // 下載福卡功能：優化截圖穩定度
             const downloadCard = async () => {
                 if (!cardRef.current || isDownloading) return;
                 setIsDownloading(true);
-                
                 try {
-                    // 使用 html2canvas 捕捉 cardRef
                     const canvas = await html2canvas(cardRef.current, {
-                        scale: 3, // 提高解析度以適應手機高清屏
+                        width: 1080,
+                        height: 1920,
+                        scale: 1, 
                         useCORS: true,
                         allowTaint: true,
                         backgroundColor: "#000000",
                         logging: false,
                         onclone: (clonedDoc) => {
-                            // 在克隆的 DOM 中強制修正排版，避免 responsive 導致的位移
                             const clonedCard = clonedDoc.querySelector('[data-card-body]');
                             if (clonedCard) {
-                                clonedCard.style.width = '380px'; // 強制寬度以穩定分散對齊
+                                // 修正下載圖片的總尺寸與結構
+                                clonedCard.style.width = '1080px';
+                                clonedCard.style.height = '1920px';
+                                clonedCard.style.maxWidth = 'none';
+                                clonedCard.style.borderRadius = '0'; 
                                 clonedCard.style.margin = '0';
+                                clonedCard.style.padding = '0';
+                                clonedCard.style.display = 'flex';
+                                clonedCard.style.flexDirection = 'column';
+
+                                // 上半部紅區
+                                const topSection = clonedCard.querySelector('.card-top');
+                                if (topSection) {
+                                    topSection.style.padding = '180px 40px 80px 40px';
+                                    topSection.style.flex = '0 0 auto';
+                                }
+
+                                // LOGO 
+                                const logoCircle = clonedCard.querySelector('.logo-circle');
+                                if (logoCircle) {
+                                    logoCircle.style.width = '380px';
+                                    logoCircle.style.height = '380px';
+                                    logoCircle.style.marginBottom = '100px';
+                                }
+
+                                // 標題文字
+                                const titleSection = clonedCard.querySelector('.title-section');
+                                if (titleSection) {
+                                    titleSection.querySelectorAll('h2').forEach(h => {
+                                        h.style.fontSize = '64px';
+                                        h.style.marginBottom = '30px';
+                                    });
+                                }
+
+                                // 下半部紙張區
+                                const bottomSection = clonedCard.querySelector('.card-bottom');
+                                if (bottomSection) {
+                                    bottomSection.style.padding = '100px 80px 140px 80px'; // 增加下邊距確保印章顯示
+                                    bottomSection.style.flex = '1';
+                                    bottomSection.style.display = 'flex';
+                                    bottomSection.style.flexDirection = 'column';
+                                }
+
+                                // 詩句區域
+                                const poetryBox = clonedCard.querySelector('.poetry-box');
+                                if (poetryBox) {
+                                    poetryBox.style.padding = '100px 80px';
+                                    poetryBox.style.minHeight = '750px';
+                                    poetryBox.style.borderRadius = '32px';
+                                    
+                                    const poetryLines = poetryBox.querySelectorAll('.poetry-line');
+                                    poetryLines.forEach(line => {
+                                        line.style.fontSize = '84px'; 
+                                        line.style.marginBottom = '50px';
+                                        line.style.display = 'flex';
+                                        line.style.justifyContent = 'space-between';
+                                    });
+                                }
+
+                                // 頁腳修正 (日期、印章) - 強制顯示
+                                const footer = clonedCard.querySelector('.card-footer');
+                                if (footer) {
+                                    footer.style.marginTop = 'auto';
+                                    footer.style.paddingTop = '100px';
+                                    footer.style.display = 'flex';
+                                    footer.style.justifyContent = 'space-between';
+                                    footer.style.alignItems = 'flex-end';
+                                    footer.style.width = '100%';
+                                    
+                                    const authDateGroup = footer.querySelector('.auth-date-group');
+                                    if (authDateGroup) {
+                                        authDateGroup.querySelector('span:first-child').style.fontSize = '28px';
+                                        authDateGroup.querySelector('.auth-date-text').style.fontSize = '46px';
+                                    }
+                                    
+                                    const seal = footer.querySelector('.card-seal');
+                                    if (seal) {
+                                        seal.style.width = '240px';
+                                        seal.style.height = '240px';
+                                        seal.style.fontSize = '80px';
+                                        seal.style.display = 'flex';
+                                        seal.style.flexWrap = 'wrap';
+                                        seal.style.justifyContent = 'center';
+                                        seal.style.alignItems = 'center';
+                                        seal.style.boxSizing = 'border-box';
+                                        seal.style.padding = '10px';
+                                    }
+                                }
                             }
                         }
                     });
-                    
                     const link = document.createElement('a');
                     link.download = `金馬鴻運福卡-${lotNumber}.png`;
                     link.href = canvas.toDataURL('image/png', 1.0);
@@ -474,9 +544,7 @@
                                 <h2 className="text-xl md:text-3xl font-bold text-stone-800 mb-6 text-center tracking-tight">靈籤第 {parseInt(lotNumber)} 號 - 心誠則靈</h2>
                                 <div className="w-full bg-[#fdfaf2] border-l-4 border-amber-800 p-6 mb-8 text-stone-800 rounded-r-lg shadow-sm font-bold">
                                     <div className="flex flex-col gap-2 w-full max-w-xs mx-auto">
-                                        {poem.map((line, i) => (
-                                            <JustifiedText key={i} text={line} className="text-xl md:text-2xl" />
-                                        ))}
+                                        {poem.map((line, i) => <JustifiedText key={i} text={line} className="text-xl md:text-2xl" />)}
                                     </div>
                                 </div>
                                 <div className="w-full text-center">
@@ -497,76 +565,56 @@
             if (page === 'card') {
                 const poem = getPoem(lotNumber);
                 return (
-                    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4 md:p-6">
+                    <div className="min-h-screen bg-black flex flex-col items-center justify-start p-4 md:p-6 overflow-y-auto">
                         <MuteButton isMuted={isMuted} toggleMusic={toggleMusic} />
                         
-                        {/* 福卡主體 - 加入 cardRef 與 data-card-body 屬性 */}
                         <div 
                             ref={cardRef}
                             data-card-body
-                            className="relative w-full max-w-[320px] md:max-w-[380px] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-[0_0_60px_rgba(180,83,9,0.4)] border-2 border-amber-600/30 flex flex-col bg-black"
+                            className="relative w-full max-w-[340px] md:max-w-[380px] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-[0_0_60px_rgba(180,83,9,0.4)] border-2 border-amber-600/30 flex flex-col bg-black flex-shrink-0"
                         >
-                            <div className="bg-gradient-to-b from-[#d32f2f] to-[#8b0000] p-6 pt-5 pb-10 flex flex-col items-center relative overflow-hidden">
+                            <div className="card-top bg-gradient-to-b from-[#d32f2f] to-[#8b0000] p-6 pt-5 pb-8 flex flex-col items-center relative overflow-hidden">
                                 <Icons.CloudImage className="absolute top-2 left-[-15%] w-32 opacity-40 animate-float" />
                                 <Icons.CloudImage className="absolute top-5 right-[-10%] w-32 opacity-30 animate-float" style={{ animationDelay: '-2s' }} />
                                 <Icons.CloudImage className="absolute bottom-[-10px] left-[20%] w-40 opacity-20 animate-float" style={{ animationDelay: '-4s' }} />
                                 <span className="text-[10px] text-amber-400/80 tracking-[0.2em] font-bold mb-8 uppercase text-nowrap relative z-10">Fortune Card</span>
-                                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-2 border-amber-400/30 flex items-center justify-center mb-10 bg-white/5 shadow-inner p-4 overflow-hidden relative z-10">
+                                <div className="logo-circle w-24 h-24 md:w-32 md:h-32 rounded-full border-2 border-amber-400/30 flex items-center justify-center mb-10 bg-white/5 shadow-inner p-4 overflow-hidden relative z-10">
                                     <Icons.MountainLogo className="w-full h-full" />
                                 </div>
-                                <div className="w-full text-center space-y-1 px-8 mb-4 relative z-10">
-                                    <h2 className="text-base md:text-lg font-black text-white tracking-[0.1em] text-center">一馬當先新開運</h2>
-                                    <h2 className="text-base md:text-lg font-black text-amber-400 tracking-[0.1em] text-center">萬事順風到終局</h2>
+                                <div className="title-section w-full text-center space-y-1 px-8 mb-4 relative z-10">
+                                    <h2 className="text-base md:text-lg font-black text-white tracking-[0.1em]">一馬當先新開運</h2>
+                                    <h2 className="text-base md:text-lg font-black text-amber-400 tracking-[0.1em]">萬事順風到終局</h2>
                                 </div>
                             </div>
-                            <div className="bg-[#fcfaf2] p-8 pb-12 flex flex-col items-center relative text-stone-800 paper-texture overflow-hidden">
+                            <div className="card-bottom bg-[#fcfaf2] p-8 pb-12 flex flex-col items-center relative text-stone-800 paper-texture overflow-hidden flex-1">
                                 <div className="text-[10px] text-red-800 font-bold mb-6 tracking-[0.2em] opacity-80 uppercase text-center text-nowrap">
                                     — 崇正寶宮 靈籤指引 —
                                 </div>
-                                <div className="bg-[#f5f3e9]/80 rounded-xl p-8 text-center shadow-inner border border-stone-200/50 min-h-[180px] w-full flex items-center justify-center overflow-hidden">
+                                <div className="poetry-box bg-[#f5f3e9]/80 rounded-xl p-8 text-center shadow-inner border border-stone-200/50 min-h-[180px] w-full flex items-center justify-center overflow-hidden">
                                     <div className="flex flex-col gap-3 w-full">
-                                        {poem.map((line, i) => (
-                                            <JustifiedText key={i} text={line} className="font-bold text-2xl md:text-3xl leading-none text-red-950" />
-                                        ))}
+                                        {poem.map((line, i) => <JustifiedText key={i} text={line} poetryLine className="font-bold text-2xl md:text-3xl leading-none text-red-950" />)}
                                     </div>
                                 </div>
-                                <div className="w-full flex justify-between items-end mt-16 px-1">
-                                    <div className="flex flex-col gap-1">
+                                <div className="card-footer w-full flex justify-between items-end mt-16 px-1">
+                                    <div className="auth-date-group flex flex-col gap-1">
                                         <span className="text-[10px] text-amber-800 font-bold opacity-50 uppercase tracking-tighter text-nowrap">Auth Date</span>
-                                        <span className="text-lg font-black text-stone-900 text-nowrap">{currentDate}</span>
+                                        <span className="auth-date-text text-lg font-black text-stone-900 text-nowrap">{currentDate}</span>
                                     </div>
-                                    <div className="w-20 h-20 bg-red-700 p-2.5 rounded-sm flex flex-wrap items-center justify-center text-white seal-font leading-none text-center shadow-md transform rotate-1 border border-white/20">
+                                    <div className="card-seal w-20 h-20 bg-red-700 p-2 rounded-sm flex flex-wrap items-center justify-center text-white seal-font leading-none text-center shadow-md transform rotate-1 border border-white/20">
                                         <div className="w-1/2">崇</div><div className="w-1/2">正</div>
                                         <div className="w-1/2">寶</div><div className="w-1/2">宮</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
-                        {/* 按鈕區域 */}
-                        <div className="mt-8 md:mt-12 flex flex-col items-center w-full max-w-[320px] gap-5">
-                            <button 
-                                onClick={() => {setPage('home'); setLotNumber('');}} 
-                                className="w-full py-4 bg-gradient-to-r from-[#d97706] to-[#b45309] text-white rounded-full font-bold text-lg shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-all"
-                            >
-                                <Icons.RefreshCw /> 再求一支靈籤
-                            </button>
-                            
-                            {/* 下載福卡按鈕 */}
-                            <button 
-                                onClick={downloadCard} 
-                                disabled={isDownloading}
-                                className={`w-full py-4 ${isDownloading ? 'bg-stone-600' : 'bg-stone-800'} text-white rounded-full font-bold text-lg shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-all`}
-                            >
-                                <Icons.Download /> {isDownloading ? '生成中...' : '下載福卡圖片'}
-                            </button>
-
+                        <div className="mt-8 mb-8 flex flex-col items-center w-full max-w-[320px] gap-5 flex-shrink-0">
+                            <button onClick={() => {setPage('home'); setLotNumber('');}} className="w-full py-4 bg-gradient-to-r from-[#d97706] to-[#b45309] text-white rounded-full font-bold text-lg shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-all"><Icons.RefreshCw /> 再求一支靈籤</button>
+                            <button onClick={downloadCard} disabled={isDownloading} className={`w-full py-4 ${isDownloading ? 'bg-stone-600' : 'bg-stone-800'} text-white rounded-full font-bold text-lg shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-all`}><Icons.Download /> {isDownloading ? '生成中...' : '下載福卡圖片'}</button>
                             <button onClick={() => setPage('result')} className="text-amber-500 font-bold tracking-widest text-sm p-2 active:opacity-50 transition-opacity">返回解籤</button>
                         </div>
                     </div>
                 );
             }
-
             return null;
         };
 
