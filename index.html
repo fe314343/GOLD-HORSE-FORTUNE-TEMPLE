@@ -13,6 +13,8 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <!-- html2canvas CDN 用於截圖下載 -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <!-- QRCode CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&display=swap');
         
@@ -65,10 +67,9 @@
             animation-delay: 0.2s;
         }
 
-        /* 雲朵漂浮動畫 */
         @keyframes float {
             0% { transform: translate(0, 0); }
-            50% { transform: translate(10px, -15px); }
+            50% { transform: translate(15px, -20px); }
             100% { transform: translate(0, 0); }
         }
         .animate-float {
@@ -98,8 +99,17 @@
         .seal-font {
             font-size: 28px;
             font-weight: 900;
-            line-height: 1.1;
+            line-height: 1;
             letter-spacing: 0.05em;
+        }
+
+        /* QR Code 彈窗動畫 */
+        @keyframes modal-fade-in {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-enter {
+            animation: modal-fade-in 0.3s ease-out forwards;
         }
     </style>
 </head>
@@ -111,25 +121,22 @@
 
         const Icons = {
             ChevronLeft: () => (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-9-6 9-6"/></svg>
             ),
             Sparkles: ({ className }) => (
                 <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3 1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
             ),
-            RefreshCw: () => (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
-            ),
-            Camera: () => (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-            ),
-            Download: () => (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            QrCode: () => (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>
             ),
             Volume2: () => (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
             ),
             VolumeX: () => (
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>
+            ),
+            X: () => (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
             ),
             MountainLogo: ({ className }) => (
                 <img 
@@ -182,7 +189,7 @@
             "19": ["清風明月翠松竹", "粗衣淡飯自在處", "虛其心而實其腹", "不憂利祿與榮辱"],
             "20": ["皮囊有盡氣數限", "明了之者緊向前", "名利浮雲終消散", "放下無拘自在安"],
             "21": ["浮華聲色蔽心目", "主人反受僕役奴", "懸崖邊緣競相逐", "慧眼速睜脫束縛"],
-            "22": ["聲色障礙成聾啞", "昏昏暗暗如何察", "一盞智燈破痴傻", "循序漸進聖域達"],
+            "22": ["聲色障礙成聾啞", "昏昏暗暗如何察", "一盞智燈破痴傻", "循序進進聖域達"],
             "23": ["數粒充腸亦果腹", "名利充腸何時足", "墨水充腸言暢舒", "道義充腸自如如"],
             "24": ["求佛拜佛口念佛", "真佛在前識不破", "非是眼前障礙多", "十惡八邪將心鎖"],
             "25": ["說三道四爛腐舌", "滿腹人非養毒蛇", "傷得人家亦害己", "不若內修緘口舌"],
@@ -196,7 +203,7 @@
             "33": ["洗淨世間之塵埃", "焰火寒冰心無礙", "平息眼光之鄙吝", "霽月光風時常在"],
             "34": ["閒暇之時惕惰氣", "收攝心猿暢天機", "騰達之時惕傲氣", "收斂心神禍遠避"],
             "35": ["酒色財氣四條路", "散亂本心深淵赴", "斷了智慧稟氣固", "何時跳脫何出苦"],
-            "36": ["上天無親德為輔", "進德修業必不孤", "事事反求於諸己", "根基穩立功功德儲"],
+            "36": ["上天無親德為輔", "進德修業必不孤", "事事反求於諸己", "根基穩立功德儲"],
             "37": ["心外求佛何處得", "尋尋覓覓愈挫折", "回頭靈山修真我", "除污復顯自性佛"],
             "38": ["走馬看花一溜煙", "禪機妙訓誰參研", "前世今生早明瞭", "快向道途保身前"],
             "39": ["顛黑倒白世態遷", "誰是誰非難論全", "只求問心而無愧", "精進德業了冤愆"],
@@ -308,11 +315,13 @@
             const [lotNumber, setLotNumber] = useState('');
             const [currentDate, setCurrentDate] = useState('');
             const [isMuted, setIsMuted] = useState(false);
-            const [isDownloading, setIsDownloading] = useState(false);
+            const [showQr, setShowQr] = useState(false);
+            const [isGenerating, setIsGenerating] = useState(false);
             
             const audioRef = useRef(null);
             const doorAudioRef = useRef(null);
             const cardRef = useRef(null);
+            const qrContainerRef = useRef(null);
 
             useEffect(() => {
                 const today = new Date();
@@ -352,130 +361,50 @@
 
             const getPoem = (num) => fortuneData[parseInt(num).toString()] || ["誠心祈求靈感應", "福星高照事皆興", "所求之事皆如意", "心誠則靈顯神明"];
 
-            const downloadCard = async () => {
-                if (!cardRef.current || isDownloading) return;
-                setIsDownloading(true);
-                try {
-                    const canvas = await html2canvas(cardRef.current, {
-                        width: 1080,
-                        height: 1920,
-                        scale: 1, 
-                        useCORS: true,
-                        allowTaint: true,
-                        backgroundColor: "#000000",
-                        logging: false,
-                        onclone: (clonedDoc) => {
-                            const clonedCard = clonedDoc.querySelector('[data-card-body]');
-                            if (clonedCard) {
-                                clonedCard.style.width = '1080px';
-                                clonedCard.style.height = '1920px';
-                                clonedCard.style.maxWidth = 'none';
-                                clonedCard.style.borderRadius = '0'; 
-                                clonedCard.style.margin = '0';
-                                clonedCard.style.padding = '0';
-                                clonedCard.style.display = 'flex';
-                                clonedCard.style.flexDirection = 'column';
-
-                                const topSection = clonedCard.querySelector('.card-top');
-                                if (topSection) {
-                                    topSection.style.padding = '140px 40px 60px 40px';
-                                    topSection.style.flex = '0 0 auto';
-                                }
-
-                                const logoCircle = clonedCard.querySelector('.logo-circle');
-                                if (logoCircle) {
-                                    logoCircle.style.width = '340px';
-                                    logoCircle.style.height = '340px';
-                                    logoCircle.style.marginBottom = '80px';
-                                }
-
-                                const titleSection = clonedCard.querySelector('.title-section');
-                                if (titleSection) {
-                                    titleSection.querySelectorAll('h2').forEach(h => {
-                                        h.style.fontSize = '64px';
-                                        h.style.marginBottom = '24px';
-                                    });
-                                }
-
-                                const bottomSection = clonedCard.querySelector('.card-bottom');
-                                if (bottomSection) {
-                                    bottomSection.style.padding = '80px 80px 140px 80px';
-                                    bottomSection.style.flex = '1';
-                                    bottomSection.style.display = 'flex';
-                                    bottomSection.style.flexDirection = 'column';
-                                }
-
-                                const poetryBox = clonedCard.querySelector('.poetry-box');
-                                if (poetryBox) {
-                                    poetryBox.style.padding = '100px 80px';
-                                    poetryBox.style.minHeight = '750px';
-                                    poetryBox.style.borderRadius = '32px';
-                                    
-                                    const poetryLines = poetryBox.querySelectorAll('.poetry-line');
-                                    poetryLines.forEach(line => {
-                                        line.style.fontSize = '84px'; 
-                                        line.style.marginBottom = '50px';
-                                        line.style.display = 'flex';
-                                        line.style.justifyContent = 'space-between';
-                                    });
-                                }
-
-                                const footer = clonedCard.querySelector('.card-footer');
-                                if (footer) {
-                                    footer.style.marginTop = 'auto';
-                                    footer.style.paddingTop = '80px';
-                                    footer.style.display = 'flex';
-                                    footer.style.justifyContent = 'space-between';
-                                    footer.style.alignItems = 'flex-end';
-                                    footer.style.width = '100%';
-                                    
-                                    const authDateGroup = footer.querySelector('.auth-date-group');
-                                    if (authDateGroup) {
-                                        authDateGroup.querySelector('span:first-child').style.fontSize = '28px';
-                                        authDateGroup.querySelector('.auth-date-text').style.fontSize = '46px';
-                                    }
-                                    
-                                    const seal = footer.querySelector('.card-seal');
-                                    if (seal) {
-                                        seal.style.width = '240px';
-                                        seal.style.height = '240px';
-                                        seal.style.fontSize = '80px';
-                                        seal.style.display = 'flex';
-                                        seal.style.flexWrap = 'wrap';
-                                        seal.style.justifyContent = 'center';
-                                        seal.style.alignItems = 'center';
-                                        seal.style.boxSizing = 'border-box';
-                                        seal.style.padding = '10px';
-                                    }
-                                }
-                            }
-                        }
-                    });
-                    const link = document.createElement('a');
-                    link.download = `金馬鴻運福籤-${lotNumber}.png`;
-                    link.href = canvas.toDataURL('image/png', 1.0);
-                    link.click();
-                } catch (err) {
-                    console.error("下載失敗", err);
-                } finally {
-                    setIsDownloading(false);
-                }
+            const resetAppAndGoHome = () => {
+                setShowQr(false);
+                setLotNumber('');
+                setPage('home');
             };
 
-            // 1. 首頁 (加大雲朵尺寸)
+            const generateQr = async () => {
+                if (!cardRef.current || isGenerating) return;
+                setIsGenerating(true);
+                setShowQr(true);
+
+                setTimeout(async () => {
+                    try {
+                        const appUrl = window.location.href.split('?')[0] + `?lot=${lotNumber}`;
+                        if (qrContainerRef.current) {
+                            qrContainerRef.current.innerHTML = "";
+                            new QRCode(qrContainerRef.current, {
+                                text: appUrl,
+                                width: 220,
+                                height: 220,
+                                colorDark : "#a52a2a",
+                                colorLight : "#ffffff",
+                                correctLevel : QRCode.CorrectLevel.H
+                            });
+                        }
+                    } catch (err) {
+                        console.error("生成 QR Code 失敗", err);
+                    } finally {
+                        setIsGenerating(false);
+                    }
+                }, 500);
+            };
+
             if (page === 'home') {
                 return (
                     <div className="min-h-screen bg-[#2d0a0a] text-stone-200 flex flex-col items-center justify-center p-6 relative overflow-hidden">
                         <MuteButton isMuted={isMuted} toggleMusic={toggleMusic} />
-                        
-                        {/* 加大尺寸的雲朵 */}
-                        <Icons.CloudImage className="absolute top-10 left-[-10%] w-72 opacity-40 animate-float" />
-                        <Icons.CloudImage className="absolute top-1/2 right-[-15%] w-96 opacity-30 animate-float" style={{ animationDelay: '-2s' }} />
-                        <Icons.CloudImage className="absolute bottom-5 left-[5%] w-64 opacity-40 animate-float" style={{ animationDelay: '-4s' }} />
+                        <Icons.CloudImage className="absolute top-0 left-[-15%] w-[35rem] opacity-40 animate-float" />
+                        <Icons.CloudImage className="absolute top-1/3 right-[-20%] w-[45rem] opacity-30 animate-float" style={{ animationDelay: '-2s' }} />
+                        <Icons.CloudImage className="absolute bottom-[-10%] left-[5%] w-[30rem] opacity-40 animate-float" style={{ animationDelay: '-4s' }} />
 
                         <div className="text-center z-10 w-full max-w-lg px-4">
                             <div className="mb-8 md:mb-12">
-                                <h2 className="text-amber-500 text-xs md:text-sm tracking-[0.4em] font-medium mb-3 uppercase">Gold Horse Fortune</h2>
+                                <h2 className="text-amber-500 text-xs md:text-sm tracking-[0.4em] font-medium mb-3 uppercase text-nowrap">Gold Horse Fortune</h2>
                                 <h1 className="text-5xl md:text-8xl font-black text-white mb-2 drop-shadow-2xl tracking-tighter">金馬鴻運</h1>
                                 <h2 className="text-4xl md:text-5xl font-bold text-amber-500 tracking-widest text-nowrap">聚福堂</h2>
                             </div>
@@ -505,101 +434,119 @@
                 );
             }
 
-            // 2. 開門動畫 (不變)
             if (page === 'door') {
                 return (
                     <div className="fixed inset-0 bg-black flex z-[100] gate-perspective">
                         <GateHalf side="left" />
                         <GateHalf side="right" />
-                        <div className="absolute inset-0 bg-[#f4f3ed] flex items-center justify-center -z-10">
-                            <div className="text-amber-600 text-2xl md:text-3xl font-bold animate-pulse tracking-widest text-nowrap">福氣臨門...</div>
+                        <div className="absolute inset-0 bg-[#f4f3ed] flex items-center justify-center -z-10 text-nowrap">
+                            <div className="text-amber-600 text-2xl md:text-3xl font-bold animate-pulse tracking-widest">福氣臨門...</div>
                         </div>
                     </div>
                 );
             }
 
-            // 3. 全新結果頁 (原本第二頁格式 + 第三頁內容)
             if (page === 'result') {
                 const poem = getPoem(lotNumber);
                 return (
-                    <div className="min-h-screen bg-[#f4f3ed] p-4 flex flex-col items-center overflow-y-auto">
+                    <div className="min-h-screen bg-[#f4f3ed] flex flex-col items-center justify-center p-4 relative overflow-hidden">
                         <MuteButton isMuted={isMuted} toggleMusic={toggleMusic} />
                         
-                        <div className="w-full max-w-[380px] mb-4">
-                            <button onClick={() => setPage('home')} className="flex items-center text-red-900 text-sm font-bold p-2 active:opacity-50 transition-opacity">
-                                <Icons.ChevronLeft /> 重返聚福堂
+                        {/* 左上角重返按鈕 */}
+                        <div className="w-full absolute top-6 left-6 z-50">
+                            <button onClick={() => setPage('home')} className="flex items-center text-red-900 text-sm font-bold p-3 bg-white/80 rounded-full shadow-md active:scale-95 transition-transform text-nowrap">
+                                <Icons.ChevronLeft className="mr-1" /> 重返聚福堂
                             </button>
-                            <div className="h-[1px] bg-stone-300 w-full" />
                         </div>
 
-                        {/* 主卡體 - 採用原本第二頁的白色卡片格式 */}
-                        <div 
-                            ref={cardRef}
-                            data-card-body
-                            className="relative w-full max-w-[340px] md:max-w-[380px] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-2xl border border-stone-200 flex flex-col bg-white"
-                        >
-                            {/* 紅色頂部區域 - 縮小版 */}
-                            <div className="card-top bg-[#a52a2a] p-4 pt-5 pb-4 flex flex-col items-center relative overflow-hidden shrink-0">
-                                <Icons.CloudImage className="absolute top-1 left-[-10%] w-24 opacity-30 animate-float" />
-                                <Icons.CloudImage className="absolute top-2 right-10 w-20 opacity-20 animate-float" style={{ animationDelay: '-1.5s' }} />
-                                <Icons.CloudImage className="absolute bottom-[-10px] left-[30%] w-28 opacity-20 animate-float" style={{ animationDelay: '-3s' }} />
-                                <span className="text-[10px] text-white/60 tracking-[0.2em] font-bold mb-4 uppercase text-nowrap relative z-10">Fortune Card</span>
-                                
-                                {/* LOGO 圓圈 - 米黃色 bg-[#fff9ea] */}
-                                <div className="logo-circle w-24 h-24 md:w-28 md:h-28 bg-[#fff9ea] rounded-full border-4 border-[#e9d5a1] flex items-center justify-center mb-6 shadow-inner p-4 overflow-hidden relative z-10">
-                                    <Icons.MountainLogo className="w-full h-full" />
-                                </div>
-                                
-                                <div className="title-section w-full text-center space-y-1 px-8 mb-2 relative z-10">
-                                    <h2 className="text-lg md:text-xl font-black text-white tracking-[0.1em]">一馬當先新開運</h2>
-                                    <h2 className="text-lg md:text-xl font-black text-amber-400 tracking-[0.1em]">萬事順風到終局</h2>
-                                </div>
-                            </div>
-                            
-                            {/* 紙張內容區 */}
-                            <div className="card-bottom p-6 pb-10 flex flex-col items-center relative text-stone-800 paper-texture overflow-hidden flex-1">
-                                <div className="text-[10px] text-red-800 font-bold mb-6 tracking-[0.2em] opacity-80 uppercase text-center text-nowrap">
-                                    — 崇正寶宮 靈籤第 {parseInt(lotNumber)} 號 —
-                                </div>
-
-                                <div className="poetry-box bg-[#fdfaf2] border-l-4 border-amber-800 rounded-r-lg p-6 mb-8 text-stone-800 shadow-sm font-bold w-full">
-                                    <div className="flex flex-col gap-3 w-full max-w-[280px] mx-auto">
-                                        {poem.map((line, i) => (
-                                            <JustifiedText key={i} text={line} poetryLine className="text-xl md:text-2xl text-red-950" />
-                                        ))}
+                        {/* 福籤卡體 */}
+                        <div className="flex-1 flex items-center justify-center w-full mt-12 mb-12 overflow-hidden">
+                            <div 
+                                ref={cardRef}
+                                data-card-body
+                                className="relative w-full max-w-[340px] md:max-w-[420px] h-fit max-h-[82vh] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-2xl border border-stone-200 flex flex-col bg-white"
+                            >
+                                <div className="card-top bg-[#a52a2a] p-4 md:p-6 pt-5 pb-4 flex flex-col items-center relative overflow-hidden shrink-0">
+                                    <Icons.CloudImage className="absolute top-1 left-[-10%] w-24 opacity-30 animate-float" />
+                                    <Icons.CloudImage className="absolute top-2 right-10 w-20 opacity-20 animate-float" style={{ animationDelay: '-1.5s' }} />
+                                    <span className="text-[10px] text-white/60 tracking-[0.2em] font-bold mb-4 uppercase text-nowrap relative z-10">Fortune Card</span>
+                                    <div className="logo-circle w-16 h-16 md:w-22 md:h-22 bg-[#fff9ea] rounded-full border-4 border-[#e9d5a1] flex items-center justify-center mb-4 shadow-inner p-3 overflow-hidden relative z-10">
+                                        <Icons.MountainLogo className="w-full h-full" />
+                                    </div>
+                                    <div className="title-section w-full text-center space-y-1 px-8 mb-2 relative z-10">
+                                        <h2 className="text-sm md:text-lg font-black text-white tracking-[0.1em] text-nowrap">一馬當先新開運</h2>
+                                        <h2 className="text-sm md:text-lg font-black text-amber-400 tracking-[0.1em] text-nowrap">萬事順風到終局</h2>
                                     </div>
                                 </div>
-                                
-                                <div className="card-footer w-full flex justify-between items-end mt-auto pt-6 px-1">
-                                    <div className="auth-date-group flex flex-col gap-1">
-                                        <span className="text-[10px] text-amber-800 font-bold opacity-50 uppercase tracking-tighter text-nowrap">Auth Date</span>
-                                        <span className="auth-date-text text-base font-black text-stone-900 text-nowrap">{currentDate}</span>
+                                <div className="card-bottom p-6 pb-10 flex flex-col items-center relative text-stone-800 paper-texture overflow-hidden flex-1 overflow-y-auto">
+                                    <div className="text-[10px] text-red-800 font-bold mb-6 tracking-[0.2em] opacity-80 uppercase text-center text-nowrap">
+                                        — 崇正寶宮 靈籤第 {parseInt(lotNumber)} 號 —
                                     </div>
-                                    <div className="card-seal w-16 h-16 bg-red-700 p-2 rounded-sm flex flex-wrap items-center justify-center text-white seal-font leading-none text-center shadow-md transform rotate-1 border border-white/20">
-                                        <div className="w-1/2">崇</div><div className="w-1/2">正</div>
-                                        <div className="w-1/2">寶</div><div className="w-1/2">宮</div>
+                                    <div className="poetry-box bg-[#fdfaf2] border-l-4 border-amber-800 rounded-r-lg p-6 mb-6 text-stone-800 shadow-sm font-bold w-full">
+                                        <div className="flex flex-col gap-4 w-full max-w-[280px] mx-auto">
+                                            {poem.map((line, i) => (
+                                                <JustifiedText key={i} text={line} poetryLine className="text-xl md:text-2xl text-red-950" />
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="card-footer w-full flex justify-between items-end mt-auto pt-6 px-1">
+                                        <div className="auth-date-group flex flex-col gap-1">
+                                            <span className="text-[10px] text-amber-800 font-bold opacity-50 uppercase tracking-tighter text-nowrap">Auth Date</span>
+                                            <span className="auth-date-text text-sm md:text-base font-black text-stone-900 text-nowrap">{currentDate}</span>
+                                        </div>
+                                        {/* 崇正寶宮印章：改為 Grid 置中佈局 */}
+                                        <div className="card-seal w-14 h-14 md:w-18 md:h-18 bg-red-700 rounded-sm shadow-md transform rotate-1 border border-white/20 grid grid-cols-2 grid-rows-2 place-items-center text-white seal-font leading-none text-center p-1">
+                                            <div className="flex items-center justify-center">崇</div>
+                                            <div className="flex items-center justify-center">正</div>
+                                            <div className="flex items-center justify-center">寶</div>
+                                            <div className="flex items-center justify-center">宮</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
-                        {/* 底部按鈕區域 */}
-                        <div className="mt-8 mb-10 flex flex-col items-center w-full max-w-[340px] gap-4 flex-shrink-0">
+
+                        {/* 最右下角生成 QR 按鈕 */}
+                        <div className="fixed bottom-6 right-6 z-50">
                             <button 
-                                onClick={() => {setPage('home'); setLotNumber('');}} 
-                                className="w-full py-4 bg-gradient-to-r from-[#d97706] to-[#b45309] text-white rounded-full font-bold text-lg shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-all"
+                                onClick={generateQr} 
+                                className="bg-[#a52a2a] text-white p-5 rounded-full shadow-2xl flex items-center justify-center active:scale-90 transition-transform shadow-red-900/40"
+                                title="領取福籤 QR Code"
                             >
-                                <Icons.RefreshCw /> 再求一支靈籤
-                            </button>
-                            
-                            <button 
-                                onClick={downloadCard} 
-                                disabled={isDownloading}
-                                className={`w-full py-4 ${isDownloading ? 'bg-stone-600' : 'bg-stone-800'} text-white rounded-full font-bold text-lg shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-all`}
-                            >
-                                <Icons.Download /> {isDownloading ? '生成中...' : '下載福籤圖片'}
+                                <Icons.QrCode className="w-8 h-8" />
                             </button>
                         </div>
+
+                        {/* QR Code 彈窗 - 關閉後回首頁 */}
+                        {showQr && (
+                            <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-[300] flex items-center justify-center p-6">
+                                <div className="bg-white rounded-3xl p-8 max-w-[340px] w-full modal-enter flex flex-col items-center relative shadow-2xl border border-white/10 text-center">
+                                    <button 
+                                        onClick={resetAppAndGoHome}
+                                        className="absolute top-4 right-4 p-2 text-stone-400 hover:text-red-800 transition-colors"
+                                    >
+                                        <Icons.X />
+                                    </button>
+                                    <h3 className="text-xl font-bold text-stone-800 mb-6 text-nowrap">領取福籤</h3>
+                                    <div className="bg-stone-50 p-4 rounded-2xl shadow-inner mb-6 flex items-center justify-center border border-stone-100 min-h-[250px] min-w-[250px]">
+                                        {isGenerating ? (
+                                            <div className="flex flex-col items-center gap-3">
+                                                <div className="w-10 h-10 border-4 border-amber-600 border-t-transparent rounded-full animate-spin"></div>
+                                                <span className="text-sm text-stone-500 text-nowrap">福報生成中...</span>
+                                            </div>
+                                        ) : (
+                                            <div ref={qrContainerRef}></div>
+                                        )}
+                                    </div>
+                                    <p className="text-sm text-stone-600 text-center leading-relaxed font-bold">
+                                        請用手機相機掃描 QR Code<br/>即可下載儲存您的個人福籤圖片
+                                    </p>
+                                    <p className="text-[10px] text-stone-400 mt-4 text-center">
+                                        ( 關閉此視窗將重啟聚福堂體驗 )
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 );
             }
