@@ -11,7 +11,7 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <!-- Babel CDN -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- html2canvas CDN 用於截圖下載 -->
+    <!-- html2canvas CDN -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <!-- QRCode CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -33,15 +33,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* 門釘樣式 */
-        .gate-stud {
-            width: clamp(10px, 2.5vw, 14px);
-            height: clamp(10px, 2.5vw, 14px);
-            background: radial-gradient(circle at 35% 35%, #fbbf24, #b45309);
-            border-radius: 50%;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.7);
-        }
-
         .gate-perspective {
             perspective: 2000px;
             overflow: hidden;
@@ -59,12 +50,10 @@
         .animate-swing-left { 
             transform-origin: left;
             animation: swing-left 2.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; 
-            animation-delay: 0.2s;
         }
         .animate-swing-right { 
             transform-origin: right;
             animation: swing-right 2.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; 
-            animation-delay: 0.2s;
         }
 
         @keyframes float {
@@ -103,7 +92,6 @@
             letter-spacing: 0.05em;
         }
 
-        /* QR Code 彈窗動畫 */
         @keyframes modal-fade-in {
             from { opacity: 0; transform: scale(0.9); }
             to { opacity: 1; transform: scale(1); }
@@ -119,54 +107,85 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        const Icons = {
-            ChevronLeft: () => (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-9-6 9-6"/></svg>
-            ),
-            Sparkles: ({ className }) => (
-                <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3 1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
-            ),
-            QrCode: () => (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>
-            ),
-            Volume2: () => (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-            ),
-            VolumeX: () => (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>
-            ),
-            X: () => (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
-            ),
-            MountainLogo: ({ className }) => (
-                <img 
-                    src="assets/白陽山LOGO.jpg" 
-                    alt="白陽山" 
-                    className={className} 
-                    style={{ objectFit: 'contain' }}
-                    loading="eager"
-                    crossOrigin="anonymous"
-                    onError={(e) => { e.target.style.opacity = 0; }}
-                />
-            ),
-            CloudImage: ({ className, style }) => (
-                <img 
-                    src="assets/cloud.png" 
-                    alt="雲朵" 
-                    className={className} 
-                    style={{ objectFit: 'contain', mixBlendMode: 'screen', ...style }} 
-                />
-            ),
-            PhotoKnocker: ({ side }) => (
-                <div className={`relative flex items-center justify-center ${side === 'left' ? 'mr-[-40px]' : 'ml-[-40px]'} z-20`}>
-                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-red-700 border-4 border-amber-500 shadow-[0_0_20px_rgba(0,0,0,0.6)] flex items-center justify-center relative">
-                        <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border border-amber-600/50 shadow-inner" />
-                        <div className="absolute inset-2 rounded-full bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-                    </div>
+        // --- 子組件定義 (定義於外部以防止 hoisting 與渲染問題) ---
+
+        const IconChevronLeft = () => (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-9-6 9-6"/></svg>
+        );
+        const IconSparkles = ({ className }) => (
+            <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3 1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+        );
+        const IconQrCode = ({ className }) => (
+            <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>
+        );
+        const IconVolume2 = () => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+        );
+        const IconVolumeX = () => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>
+        );
+        const IconX = () => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+        );
+
+        const MountainLogo = ({ className }) => (
+            <img 
+                src="assets/白陽山LOGO.jpg" 
+                alt="白陽山" 
+                className={className} 
+                style={{ objectFit: 'contain' }}
+                loading="eager"
+                crossOrigin="anonymous"
+                onError={(e) => { e.target.style.opacity = 0; }}
+            />
+        );
+
+        const CloudImage = ({ className, style }) => (
+            <img 
+                src="assets/cloud.png" 
+                alt="雲朵" 
+                className={className} 
+                style={{ objectFit: 'contain', mixBlendMode: 'screen', ...style }} 
+            />
+        );
+
+        const JustifiedText = ({ text, className, style, poetryLine }) => {
+            if (!text) return null;
+            const chars = text.split("");
+            return (
+                <div className={`flex justify-between w-full select-none whitespace-nowrap ${poetryLine ? 'poetry-line' : ''} ${className}`} style={{ minWidth: '100%', ...style }}>
+                    {chars.map((char, i) => <span key={i} style={{ display: 'inline-block' }}>{char}</span>)}
                 </div>
-            )
+            );
         };
 
+        const MuteButton = ({ isMuted, toggleMusic }) => (
+            <button onClick={toggleMusic} className="fixed top-4 right-4 z-[200] p-2 bg-black/30 rounded-full text-amber-400 hover:bg-black/50 transition-colors shadow-lg">
+                {isMuted ? <IconVolumeX /> : <IconVolume2 />}
+            </button>
+        );
+
+        const GateHalf = ({ side }) => {
+            const studs = Array(6).fill(0);
+            return (
+                <div className={`w-1/2 h-full wood-texture border-y-8 border-black relative flex items-center shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] ${side === 'left' ? 'animate-swing-left justify-end border-r-2 border-r-black/50' : 'animate-swing-right justify-start border-l-2 border-l-black/50'}`}>
+                    <div className="absolute inset-y-0 w-full bg-gradient-to-r from-black/20 via-transparent to-black/20 pointer-events-none" />
+                    <div className={`absolute inset-0 flex items-center ${side === 'left' ? 'justify-start pl-8 md:pl-16' : 'justify-end pr-8 md:pr-16'}`}>
+                        <div className="grid grid-cols-2 grid-rows-3 gap-x-6 gap-y-12 md:gap-x-12 md:gap-y-20 opacity-90">
+                            {studs.map((_, i) => <div key={i} className="gate-stud" />)}
+                        </div>
+                    </div>
+                    <div className={`relative flex items-center justify-center ${side === 'left' ? 'mr-[-40px]' : 'ml-[-40px]'} z-20`}>
+                        <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-red-700 border-4 border-amber-500 shadow-[0_0_20px_rgba(0,0,0,0.6)] flex items-center justify-center relative">
+                            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border border-amber-600/50 shadow-inner" />
+                            <div className="absolute inset-2 rounded-full bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // 靈籤數據
         const fortuneData = {
             "1": ["欲成精金美玉品", "須向烈火焠煉真", "思立驚天動地業", "須懷慎終如始心"],
             "2": ["渡海浮囊一針差", "千里堤堰一蟻沙", "念頭雖微物縱恣", "高聳德業一夕塌"],
@@ -203,7 +222,7 @@
             "33": ["洗淨世間之塵埃", "焰火寒冰心無礙", "平息眼光之鄙吝", "霽月光風時常在"],
             "34": ["閒暇之時惕惰氣", "收攝心猿暢天機", "騰達之時惕傲氣", "收斂心神禍遠避"],
             "35": ["酒色財氣四條路", "散亂本心深淵赴", "斷了智慧稟氣固", "何時跳脫何出苦"],
-            "36": ["上天無親德為輔", "進德修業必不孤", "事事反求於諸己", "根基穩立功功德儲"],
+            "36": ["上天無親德為輔", "進德修業必不孤", "事事反求於諸己", "根基穩立功德儲"],
             "37": ["心外求佛何處得", "尋尋覓覓愈挫折", "回頭靈山修真我", "除污復顯自性佛"],
             "38": ["走馬看花一溜煙", "禪機妙訓誰參研", "前世今生早明瞭", "快向道途保身前"],
             "39": ["顛黑倒白世態遷", "誰是誰非難論全", "只求問心而無愧", "精進德業了冤愆"],
@@ -212,7 +231,7 @@
             "42": ["端品正行何勞人", "收得心住道志伸", "醍醐灌頂句句是", "牢守方寸早安頓"],
             "43": ["斬孽根脫輪迴", "了生死故都歸", "紅塵中不迷醉", "守道心凡胎蛻"],
             "44": ["菩提種植心田", "拔疑惑信心堅", "除是非治蟲害", "道義潤果碩圓"],
-            "45": ["世事變如棋局", "轉眼間大勢去", "當慎思下手處", "手一起難回移"],
+            "45": ["世事變如棋局", "轉眼間大勢去", "當慎思下手處", "手起一難回移"],
             "46": ["口腹欲債高築", "堆如山障運途", "暴戾氣如何除", "惟功德還清楚"],
             "47": ["世路雖繁華", "常思黃泉下", "利慾心自淡", "言行不浮誇"],
             "48": ["洗淨名利眼", "復歸菩薩顏", "淡泊富貴心", "常懷慈悲念"],
@@ -271,45 +290,6 @@
             "101": ["縱情逐物事紛擾", "放下萬緣一步超"]
         };
 
-        const JustifiedText = ({ text, className, style, poetryLine }) => {
-            if (!text) return null;
-            const chars = text.split("");
-            return (
-                <div 
-                    className={`flex justify-between w-full select-none whitespace-nowrap ${poetryLine ? 'poetry-line' : ''} ${className}`} 
-                    style={{ minWidth: '100%', ...style }}
-                >
-                    {chars.map((char, i) => (
-                        <span key={i} style={{ display: 'inline-block' }}>{char}</span>
-                    ))}
-                </div>
-            );
-        };
-
-        const MuteButton = ({ isMuted, toggleMusic }) => (
-            <button 
-                onClick={toggleMusic} 
-                className="fixed top-4 right-4 z-[200] p-2 bg-black/30 rounded-full text-amber-400 hover:bg-black/50 transition-colors shadow-lg"
-            >
-                {isMuted ? <Icons.VolumeX /> : <Icons.Volume2 />}
-            </button>
-        );
-
-        const GateHalf = ({ side }) => {
-            const studs = Array(6).fill(0);
-            return (
-                <div className={`w-1/2 h-full wood-texture border-y-8 border-black relative flex items-center shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] ${side === 'left' ? 'animate-swing-left justify-end border-r-2 border-r-black/50' : 'animate-swing-right justify-start border-l-2 border-l-black/50'}`}>
-                    <div className="absolute inset-y-0 w-full bg-gradient-to-r from-black/20 via-transparent to-black/20 pointer-events-none" />
-                    <div className={`absolute inset-0 flex items-center ${side === 'left' ? 'justify-start pl-8 md:pl-16' : 'justify-end pr-8 md:pr-16'}`}>
-                        <div className="grid grid-cols-2 grid-rows-3 gap-x-6 gap-y-12 md:gap-x-12 md:gap-y-20 opacity-90">
-                            {studs.map((_, i) => <div key={i} className="gate-stud" />)}
-                        </div>
-                    </div>
-                    <Icons.PhotoKnocker side={side} />
-                </div>
-            );
-        };
-
         const App = () => {
             const [page, setPage] = useState('home');
             const [lotNumber, setLotNumber] = useState('');
@@ -330,6 +310,13 @@
                 audioRef.current.loop = true;
                 doorAudioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2177/2177-preview.mp3');
 
+                const urlParams = new URLSearchParams(window.location.search);
+                const lotParam = urlParams.get('lot');
+                if (lotParam && fortuneData[lotParam]) {
+                    setLotNumber(lotParam);
+                    setPage('result');
+                }
+
                 const playOnFirstInteraction = () => {
                     if (audioRef.current && !isMuted) audioRef.current.play().catch(() => {});
                     window.removeEventListener('mousedown', playOnFirstInteraction);
@@ -341,20 +328,28 @@
                 };
             }, []);
 
-            // 修正：使用 useEffect 監聽 showQr，確保在 Ref 掛載後才生成 QR Code
+            // 修復 QR Code 生成邏輯
             useEffect(() => {
                 if (showQr && qrContainerRef.current) {
                     qrContainerRef.current.innerHTML = "";
-                    const appUrl = window.location.href.split('?')[0] + `?lot=${lotNumber}`;
-                    new QRCode(qrContainerRef.current, {
-                        text: appUrl,
-                        width: 240,
-                        height: 240,
-                        colorDark : "#a52a2a",
-                        colorLight : "#ffffff",
-                        correctLevel : QRCode.CorrectLevel.H
-                    });
-                    setIsGenerating(false);
+                    const finalUrl = window.location.origin + window.location.pathname + `?lot=${lotNumber}`;
+                    
+                    try {
+                        if (typeof QRCode !== 'undefined') {
+                            new QRCode(qrContainerRef.current, {
+                                text: finalUrl,
+                                width: 220,
+                                height: 220,
+                                colorDark : "#a52a2a",
+                                colorLight : "#ffffff",
+                                correctLevel : QRCode.CorrectLevel.H
+                            });
+                            setTimeout(() => setIsGenerating(false), 500);
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        setIsGenerating(false);
+                    }
                 }
             }, [showQr, lotNumber]);
 
@@ -376,17 +371,10 @@
                 setTimeout(() => setPage('result'), 2800);
             };
 
-            const getPoem = (num) => fortuneData[parseInt(num).toString()] || ["誠心祈求靈感應", "福星高照事皆興", "所求之事皆如意", "心誠則靈顯神明"];
-
             const resetAppAndGoHome = () => {
                 setShowQr(false);
                 setLotNumber('');
                 setPage('home');
-            };
-
-            const openQrModal = () => {
-                setIsGenerating(true);
-                setShowQr(true);
             };
 
             if (page === 'home') {
@@ -394,11 +382,11 @@
                     <div className="min-h-screen bg-[#2d0a0a] text-stone-200 flex flex-col items-center justify-center p-6 relative overflow-hidden">
                         <MuteButton isMuted={isMuted} toggleMusic={toggleMusic} />
                         
-                        {/* 加大尺寸且有層次感的大小雲朵 */}
-                        <Icons.CloudImage className="absolute top-[-5%] left-[-10%] w-[45rem] opacity-40 animate-float" />
-                        <Icons.CloudImage className="absolute top-1/4 right-[-15%] w-[25rem] opacity-25 animate-float" style={{ animationDelay: '-1s' }} />
-                        <Icons.CloudImage className="absolute top-1/2 left-[-20%] w-[38rem] opacity-35 animate-float" style={{ animationDelay: '-3s' }} />
-                        <Icons.CloudImage className="absolute bottom-[-10%] right-[-10%] w-[32rem] opacity-45 animate-float" style={{ animationDelay: '-4s' }} />
+                        {/* 修正尺寸分層的大小雲朵 */}
+                        <CloudImage className="absolute top-[-5%] left-[-10%] w-[28rem] opacity-40 animate-float" />
+                        <CloudImage className="absolute top-1/4 right-[-5%] w-[10rem] opacity-25 animate-float" style={{ animationDelay: '-1.5s' }} />
+                        <CloudImage className="absolute top-1/2 left-[-15%] w-[18rem] opacity-35 animate-float" style={{ animationDelay: '-3s' }} />
+                        <CloudImage className="absolute bottom-[-2%] right-[-5%] w-[12rem] opacity-45 animate-float" style={{ animationDelay: '-4.5s' }} />
 
                         <div className="text-center z-10 w-full max-w-lg px-4">
                             <div className="mb-8 md:mb-12">
@@ -422,7 +410,7 @@
                                         />
                                     </div>
                                     <button onClick={handleStart} className="w-full bg-gradient-to-b from-[#e68a00] to-[#b35900] text-white py-4 rounded-xl shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all">
-                                        <Icons.Sparkles className="text-amber-100" />
+                                        <IconSparkles className="text-amber-100" />
                                         <span className="text-lg md:text-xl font-bold tracking-[0.2em]">開啟鴻運</span>
                                     </button>
                                 </div>
@@ -434,10 +422,10 @@
 
             if (page === 'door') {
                 return (
-                    <div className="fixed inset-0 bg-black flex z-[100] gate-perspective">
+                    <div className="fixed inset-0 bg-black flex z-[100] gate-perspective text-nowrap">
                         <GateHalf side="left" />
                         <GateHalf side="right" />
-                        <div className="absolute inset-0 bg-[#f4f3ed] flex items-center justify-center -z-10 text-nowrap">
+                        <div className="absolute inset-0 bg-[#f4f3ed] flex items-center justify-center -z-10">
                             <div className="text-amber-600 text-2xl md:text-3xl font-bold animate-pulse tracking-widest">福氣臨門...</div>
                         </div>
                     </div>
@@ -445,7 +433,7 @@
             }
 
             if (page === 'result') {
-                const poem = getPoem(lotNumber);
+                const poem = fortuneData[parseInt(lotNumber).toString()] || ["誠心祈求靈感應", "福星高照事皆興", "所求之事皆如意", "心誠則靈顯神明"];
                 return (
                     <div className="min-h-screen bg-[#f4f3ed] flex flex-col items-center justify-center p-4 relative overflow-hidden">
                         <MuteButton isMuted={isMuted} toggleMusic={toggleMusic} />
@@ -453,23 +441,19 @@
                         {/* 左上角重返按鈕 */}
                         <div className="w-full absolute top-6 left-6 z-50">
                             <button onClick={() => setPage('home')} className="flex items-center text-red-900 text-sm font-bold p-3 bg-white/80 rounded-full shadow-md active:scale-95 transition-transform text-nowrap">
-                                <Icons.ChevronLeft className="mr-1" /> 重返聚福堂
+                                <IconChevronLeft className="mr-1" /> 重返聚福堂
                             </button>
                         </div>
 
-                        {/* 福籤卡體 - 優化全螢幕比例 */}
-                        <div className="flex-1 flex items-center justify-center w-full mt-12 mb-12 overflow-hidden">
-                            <div 
-                                ref={cardRef}
-                                data-card-body
-                                className="relative w-full max-w-[340px] md:max-w-[420px] h-fit max-h-[82vh] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-2xl border border-stone-200 flex flex-col bg-white"
-                            >
+                        {/* 福籤卡體 - 精準縮小紅色區域 */}
+                        <div className="flex-1 flex items-center justify-center w-full mt-10 mb-10 overflow-hidden">
+                            <div ref={cardRef} data-card-body className="relative w-full max-w-[340px] md:max-w-[420px] h-fit max-h-[82vh] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-2xl border border-stone-200 flex flex-col bg-white">
                                 <div className="card-top bg-[#a52a2a] p-4 md:p-6 pt-5 pb-4 flex flex-col items-center relative overflow-hidden shrink-0">
-                                    <Icons.CloudImage className="absolute top-1 left-[-10%] w-24 opacity-30 animate-float" />
-                                    <Icons.CloudImage className="absolute top-2 right-10 w-20 opacity-20 animate-float" style={{ animationDelay: '-1.5s' }} />
+                                    <CloudImage className="absolute top-1 left-[-10%] w-24 opacity-30 animate-float" />
+                                    <CloudImage className="absolute top-2 right-10 w-20 opacity-20 animate-float" />
                                     <span className="text-[10px] text-white/60 tracking-[0.2em] font-bold mb-4 uppercase text-nowrap relative z-10">Fortune Card</span>
                                     <div className="logo-circle w-16 h-16 md:w-22 md:h-22 bg-[#fff9ea] rounded-full border-4 border-[#e9d5a1] flex items-center justify-center mb-4 shadow-inner p-3 overflow-hidden relative z-10">
-                                        <Icons.MountainLogo className="w-full h-full" />
+                                        <MountainLogo className="w-full h-full" />
                                     </div>
                                     <div className="title-section w-full text-center space-y-1 px-8 mb-2 relative z-10">
                                         <h2 className="text-sm md:text-lg font-black text-white tracking-[0.1em] text-nowrap">一馬當先新開運</h2>
@@ -488,59 +472,50 @@
                                         </div>
                                     </div>
                                     <div className="card-footer w-full flex justify-between items-end mt-auto pt-6 px-1">
-                                        <div className="auth-date-group flex flex-col gap-1">
+                                        <div className="auth-date-group flex flex-col gap-1 text-stone-900">
                                             <span className="text-[10px] text-amber-800 font-bold opacity-50 uppercase tracking-tighter text-nowrap">Auth Date</span>
-                                            <span className="auth-date-text text-sm md:text-base font-black text-stone-900 text-nowrap">{currentDate}</span>
+                                            <span className="auth-date-text text-sm md:text-base font-black text-nowrap">{currentDate}</span>
                                         </div>
-                                        {/* 崇正寶宮印章：修正置中對齊 */}
-                                        <div className="card-seal w-14 h-14 md:w-20 md:h-20 bg-red-700 rounded-sm shadow-md transform rotate-1 border border-white/20 grid grid-cols-2 grid-rows-2 place-items-center text-white seal-font leading-none text-center p-1">
-                                            <div className="flex items-center justify-center h-full w-full">崇</div>
-                                            <div className="flex items-center justify-center h-full w-full">正</div>
-                                            <div className="flex items-center justify-center h-full w-full">寶</div>
-                                            <div className="flex items-center justify-center h-full w-full">宮</div>
+                                        {/* 印章置中修正 */}
+                                        <div className="card-seal w-14 h-14 md:w-20 md:h-20 bg-red-700 rounded-sm shadow-md transform rotate-1 border border-white/20 grid grid-cols-2 grid-rows-2 place-items-center text-white seal-font leading-none p-1">
+                                            <div className="flex items-center justify-center">崇</div>
+                                            <div className="flex items-center justify-center">正</div>
+                                            <div className="flex items-center justify-center">寶</div>
+                                            <div className="flex items-center justify-center">宮</div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* 最右下角生成 QR 按鈕 */}
+                        {/* 最右下角領取福籤按鈕 */}
                         <div className="fixed bottom-6 right-6 z-50">
-                            <button 
-                                onClick={openQrModal} 
-                                className="bg-[#a52a2a] text-white p-5 rounded-full shadow-2xl flex items-center justify-center active:scale-90 transition-transform shadow-red-900/40 border-2 border-amber-500/20"
-                                title="領取福籤 QR Code"
-                            >
-                                <Icons.QrCode className="w-8 h-8" />
+                            <button onClick={() => { setIsGenerating(true); setShowQr(true); }} className="bg-[#a52a2a] text-white p-5 rounded-full shadow-2xl flex items-center justify-center active:scale-90 transition-transform border-2 border-amber-500/20" title="領取福籤 QR Code">
+                                <IconQrCode className="w-8 h-8" />
                             </button>
                         </div>
 
-                        {/* QR Code 彈窗 - 修正生成邏輯與關閉邏輯 */}
                         {showQr && (
-                            <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-[300] flex items-center justify-center p-6">
-                                <div className="bg-white rounded-3xl p-8 max-w-[340px] w-full modal-enter flex flex-col items-center relative shadow-2xl border border-white/10 text-center">
-                                    <button 
-                                        onClick={resetAppAndGoHome}
-                                        className="absolute top-4 right-4 p-2 text-stone-400 hover:text-red-800 transition-colors"
-                                    >
-                                        <Icons.X />
+                            <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-[300] flex items-center justify-center p-6 text-center">
+                                <div className="bg-white rounded-3xl p-8 max-w-[340px] w-full modal-enter flex flex-col items-center relative shadow-2xl border border-white/10">
+                                    <button onClick={resetAppAndGoHome} className="absolute top-4 right-4 p-2 text-stone-400 hover:text-red-800 transition-colors">
+                                        <IconX />
                                     </button>
-                                    <h3 className="text-xl font-bold text-stone-800 mb-6 text-nowrap">領取個人福籤</h3>
-                                    <div className="bg-stone-50 p-4 rounded-2xl shadow-inner mb-6 flex items-center justify-center border border-stone-100 min-h-[250px] min-w-[250px]">
-                                        {isGenerating ? (
-                                            <div className="flex flex-col items-center gap-3">
+                                    <h3 className="text-xl font-bold text-stone-800 mb-6 text-nowrap">掃描即可下載福籤</h3>
+                                    <div className="bg-stone-50 p-4 rounded-2xl shadow-inner mb-6 flex items-center justify-center border border-stone-100 min-h-[250px] min-w-[250px] relative">
+                                        <div ref={qrContainerRef} className={isGenerating ? 'invisible' : 'visible'}></div>
+                                        {isGenerating && (
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white/50 rounded-2xl">
                                                 <div className="w-10 h-10 border-4 border-amber-600 border-t-transparent rounded-full animate-spin"></div>
-                                                <span className="text-sm text-stone-500 text-nowrap">福報生成中...</span>
+                                                <span className="text-sm text-stone-500 text-nowrap">網址生成中...</span>
                                             </div>
-                                        ) : (
-                                            <div ref={qrContainerRef}></div>
                                         )}
                                     </div>
                                     <p className="text-sm text-stone-600 text-center leading-relaxed font-bold">
-                                        請用手機相機掃描 QR Code<br/>即可開啟並下載儲存您的靈籤
+                                        請用手機相機掃描 QR Code<br/>即可進入該籤頁面並進行儲存
                                     </p>
-                                    <p className="text-[10px] text-stone-400 mt-4 text-center">
-                                        ( 關閉視窗後將重啟聚福堂 )
+                                    <p className="text-[10px] text-stone-400 mt-4">
+                                        ( 關閉視窗後將回到首頁 )
                                     </p>
                                 </div>
                             </div>
