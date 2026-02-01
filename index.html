@@ -27,10 +27,10 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #D4C4B7; border-radius: 2px; }
 
         /* --- 核心去背與混合技術 --- */
-        .transparent-media {
+        /*.transparent-media {
             mix-blend-mode: screen; 
             filter: brightness(1.2) contrast(1.1);
-        }
+        }*/
 
         /* --- 基本動畫 --- */
         @keyframes float-slow { 
@@ -52,7 +52,7 @@
         .perspective-container { perspective: 1000px; }
         .paper-bg {
             background-color: #FFFDF9;
-           /* background-image: url("https://www.transparenttextures.com/patterns/handmade-paper.png");*/
+            background-image: url("https://www.transparenttextures.com/patterns/handmade-paper.png");
         }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         
@@ -69,7 +69,7 @@
         const { useState, useEffect, useRef } = React;
 
         // --- 資源路徑設定 ---
-        const BGM_URL = './assets/bgm.mp3';
+        const BGM_URL = './assets/bgm.mp3'; 
         const CLOUD_IMAGE_URL = './assets/cloud.png';
 
         // --- 卦象資料庫 (已清理所有特殊間隔號) ---
@@ -98,7 +98,7 @@
                 if (window.lucide) window.lucide.createIcons(); 
             }, [name, size]);
             // 使用內嵌樣式並確保單位，解決行動端可能出現的方塊問題
-           // return <i data-lucide={name} style={{ width: size + 'px', height: size + 'px', display: 'inline-block' }} className={className}></i>;
+            return <i data-lucide={name} style={{ width: size + 'px', height: size + 'px', display: 'inline-block' }} className={className}></i>;
         };
 
         const PalaceSeal = ({ className }) => (
