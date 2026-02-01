@@ -11,7 +11,7 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <!-- Babel CDN -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- html2canvas CDN 用于截屏下载 -->
+    <!-- html2canvas CDN 用於截圖下載 -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&display=swap');
@@ -267,14 +267,14 @@
             "101": ["縱情逐物事紛擾", "放下萬緣一步超"]
         };
 
-        // 元件定義移至外部
+        // 元件定義移至外部以避免 hoisting 問題與 Error 130
         const JustifiedText = ({ text, className }) => {
             if (!text) return null;
             const chars = text.split("");
             return (
-                <div className={`flex justify-between w-full select-none whitespace-nowrap overflow-visible ${className}`}>
+                <div className={`flex justify-between w-full select-none whitespace-nowrap ${className}`} style={{ minWidth: '100%' }}>
                     {chars.map((char, i) => (
-                        <span key={i}>{char}</span>
+                        <span key={i} style={{ display: 'inline-block' }}>{char}</span>
                     ))}
                 </div>
             );
@@ -364,22 +364,32 @@
                 return fortuneData[key] || ["誠心祈求靈感應", "福星高照事皆興", "所求之事皆如意", "心誠則靈顯神明"];
             };
 
-            // 下載福卡功能
+            // 下載福卡功能：優化截圖穩定度
             const downloadCard = async () => {
                 if (!cardRef.current || isDownloading) return;
                 setIsDownloading(true);
                 
                 try {
+                    // 使用 html2canvas 捕捉 cardRef
                     const canvas = await html2canvas(cardRef.current, {
-                        scale: 3, // 提高解析度
-                        useCORS: true, // 允許跨域圖片
+                        scale: 3, // 提高解析度以適應手機高清屏
+                        useCORS: true,
+                        allowTaint: true,
                         backgroundColor: "#000000",
-                        logging: false
+                        logging: false,
+                        onclone: (clonedDoc) => {
+                            // 在克隆的 DOM 中強制修正排版，避免 responsive 導致的位移
+                            const clonedCard = clonedDoc.querySelector('[data-card-body]');
+                            if (clonedCard) {
+                                clonedCard.style.width = '380px'; // 強制寬度以穩定分散對齊
+                                clonedCard.style.margin = '0';
+                            }
+                        }
                     });
                     
                     const link = document.createElement('a');
                     link.download = `金馬鴻運福卡-${lotNumber}.png`;
-                    link.href = canvas.toDataURL('image/png');
+                    link.href = canvas.toDataURL('image/png', 1.0);
                     link.click();
                 } catch (err) {
                     console.error("下載失敗", err);
@@ -490,9 +500,10 @@
                     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4 md:p-6">
                         <MuteButton isMuted={isMuted} toggleMusic={toggleMusic} />
                         
-                        {/* 福卡主體 - 加入 cardRef 用於截圖 */}
+                        {/* 福卡主體 - 加入 cardRef 與 data-card-body 屬性 */}
                         <div 
                             ref={cardRef}
+                            data-card-body
                             className="relative w-full max-w-[320px] md:max-w-[380px] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-[0_0_60px_rgba(180,83,9,0.4)] border-2 border-amber-600/30 flex flex-col bg-black"
                         >
                             <div className="bg-gradient-to-b from-[#d32f2f] to-[#8b0000] p-6 pt-5 pb-10 flex flex-col items-center relative overflow-hidden">
@@ -504,8 +515,8 @@
                                     <Icons.MountainLogo className="w-full h-full" />
                                 </div>
                                 <div className="w-full text-center space-y-1 px-8 mb-4 relative z-10">
-                                    <h2 className="text-base md:text-lg font-black text-white tracking-[0.1em]">一馬當先新開運</h2>
-                                    <h2 className="text-base md:text-lg font-black text-amber-400 tracking-[0.1em]">萬事順風到終局</h2>
+                                    <h2 className="text-base md:text-lg font-black text-white tracking-[0.1em] text-center">一馬當先新開運</h2>
+                                    <h2 className="text-base md:text-lg font-black text-amber-400 tracking-[0.1em] text-center">萬事順風到終局</h2>
                                 </div>
                             </div>
                             <div className="bg-[#fcfaf2] p-8 pb-12 flex flex-col items-center relative text-stone-800 paper-texture overflow-hidden">
