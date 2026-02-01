@@ -157,7 +157,7 @@
             )
         };
 
-        // 靈籤數據 (1-101)
+        // 完整籤詩數據 (1-101)
         const fortuneData = {
             "1": ["欲成精金美玉品", "須向烈火焠煉真", "思立驚天動地業", "須懷慎終如始心"],
             "2": ["渡海浮囊一針差", "千里堤堰一蟻沙", "念頭雖微物縱恣", "高聳德業一夕塌"],
@@ -262,7 +262,7 @@
             "101": ["縱情逐物事紛擾", "放下萬緣一步超"]
         };
 
-        // 元件定義移至外部以避免 hoisting 問題與 Error 130
+        // 元件定義移至外部
         const JustifiedText = ({ text, className }) => {
             if (!text) return null;
             const chars = text.split("");
@@ -313,7 +313,9 @@
                 
                 audioRef.current = new Audio('assets/bgm.mp3');
                 audioRef.current.loop = true;
-                doorAudioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2180/2180-preview.mp3');
+                
+                // 更換為吱呀聲的木門開門音效
+                doorAudioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2177/2177-preview.mp3');
 
                 const playOnFirstInteraction = () => {
                     if (audioRef.current && !isMuted) {
@@ -356,6 +358,7 @@
                 return fortuneData[key] || ["誠心祈求靈感應", "福星高照事皆興", "所求之事皆如意", "心誠則靈顯神明"];
             };
 
+            // 1. 首頁
             if (page === 'home') {
                 return (
                     <div className="min-h-screen bg-[#2d0a0a] text-stone-200 flex flex-col items-center justify-center p-6 relative overflow-hidden">
@@ -395,6 +398,7 @@
                 );
             }
 
+            // 2. 開門動畫
             if (page === 'door') {
                 return (
                     <div className="fixed inset-0 bg-black flex z-[100] gate-perspective">
@@ -407,6 +411,7 @@
                 );
             }
 
+            // 3. 解籤頁面
             if (page === 'result') {
                 const poem = getPoem(lotNumber);
                 return (
@@ -418,7 +423,7 @@
                             </button>
                             <div className="h-[1px] bg-stone-300 w-full" />
                         </div>
-                        <div className="w-full max-w-lg bg-white rounded-xl shadow-xl mb-6 flex flex-col overflow-hidden relative">
+                        <div className="w-full max-w-lg bg-white rounded-xl shadow-xl mb-6 flex flex-col overflow-hidden relative border border-stone-200">
                             <div className="h-14 md:h-16 bg-[#a52a2a] relative flex items-center px-6 shrink-0 overflow-hidden">
                                 <Icons.CloudImage className="absolute top-1 left-[-10%] w-24 opacity-30 animate-float" />
                                 <Icons.CloudImage className="absolute top-2 right-10 w-20 opacity-20 animate-float" style={{ animationDelay: '-1.5s' }} />
