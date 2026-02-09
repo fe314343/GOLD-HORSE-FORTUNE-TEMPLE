@@ -83,11 +83,17 @@
             box-shadow: inset 0 0 120px rgba(0,0,0,0.7);
         }
 
+        /* 調整印章字體大小以適應縮小後的容器 */
         .seal-font {
-            font-size: 28px;
+            font-size: 18px; /* 手機版預設 */
             font-weight: 900;
-            line-height: 1;
+            line-height: 1.1;
             letter-spacing: 0.05em;
+        }
+        @media (min-width: 768px) {
+            .seal-font {
+                font-size: 28px;
+            }
         }
     </style>
 </head>
@@ -97,7 +103,8 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- 子組件定義 ---
+        // --- 子組件定義 (定義於頂層以防止 Error #130) ---
+
         const IconChevronLeft = () => (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-9-6 9-6"/></svg>
         );
@@ -177,7 +184,7 @@
           { id: 3, name: "屯", symbol: "水雷", lucky: "好事多磨", text: "元亨利貞，勿用有攸往，利建侯。" },
           { id: 4, name: "蒙", symbol: "山水", lucky: "啟蒙開智", text: "亨。匪我求童蒙，童蒙求我。" },
           { id: 5, name: "需", symbol: "水天", lucky: "時機成熟", text: "有孚，光亨，貞吉。利涉大川。" },
-          { id: 6, name: "訟", symbol: "天水", lucky: "止爭息訟", text: "有孚，窒惕，中吉，終凶.利見大人，不利涉大川。" },
+          { id: 6, name: "訟", symbol: "天水", lucky: "止爭息訟", text: "有孚，窒惕，中吉，終凶。利見大人，不利涉大川。" },
           { id: 7, name: "師", symbol: "地水", lucky: "馬到成功", text: "貞，丈人，吉，无咎。" },
           { id: 8, name: "比", symbol: "水地", lucky: "貴人相助", text: "吉。原筮，元永貞，无咎。不寧方來，後夫凶。" },
           { id: 9, name: "小畜", symbol: "風天", lucky: "小有斬獲", text: "亨。密雲不雨，自我西郊。" },
@@ -192,6 +199,7 @@
           { id: 64, name: "未濟", symbol: "火水", lucky: "重新出發", text: "亨，小狐汔濟，濡其尾，无攸利。" }
         ];
 
+        // 自動生成 64 卦數據庫
         const fortuneData = {};
         for (let i = 1; i <= 64; i++) {
             const base = hexagramsBase.find(h => h.id === i) || {
@@ -262,14 +270,17 @@
                 return (
                     <div className="min-h-screen bg-[#2d0a0a] text-stone-200 flex flex-col items-center justify-center p-6 relative overflow-hidden">
                         <MuteButton isMuted={isMuted} toggleMusic={toggleMusic} />
-                        <CloudImage className="absolute top-[-5%] left-[-8%] w-[24rem] opacity-40 animate-float" />
-                        <CloudImage className="absolute top-1/4 right-[-5%] w-[10rem] opacity-25 animate-float" style={{ animationDelay: '-1.5s' }} />
-                        <CloudImage className="absolute top-1/2 left-[-12%] w-[16rem] opacity-35 animate-float" style={{ animationDelay: '-3s' }} />
-                        <CloudImage className="absolute bottom-[-2%] right-[-5%] w-[14rem] opacity-45 animate-float" style={{ animationDelay: '-4.8s' }} />
+                        
+                        {/* 縮小且多層次的雲朵佈置 */}
+                        <CloudImage className="absolute top-[-4%] left-[-8%] w-[20rem] opacity-40 animate-float" />
+                        <CloudImage className="absolute top-1/4 right-[-4%] w-[8rem] opacity-25 animate-float" style={{ animationDelay: '-1.5s' }} />
+                        <CloudImage className="absolute top-1/2 left-[-12%] w-[15rem] opacity-35 animate-float" style={{ animationDelay: '-3s' }} />
+                        <CloudImage className="absolute bottom-[-3%] right-[-6%] w-[12rem] opacity-45 animate-float" style={{ animationDelay: '-4.8s' }} />
 
                         <div className="text-center z-10 w-full max-w-lg px-4">
                             <div className="mb-8 md:mb-12">
                                 <h2 className="text-amber-500 text-xs md:text-sm tracking-[0.4em] font-medium mb-3 uppercase text-nowrap">Gold Horse Fortune</h2>
+                                {/* 金紅漸層標題 */}
                                 <h1 className="text-5xl md:text-8xl font-black mb-2 drop-shadow-2xl tracking-tighter text-nowrap bg-clip-text text-transparent bg-gradient-to-b from-[#fde68a] via-[#fbbf24] to-[#991b1b]">金馬鴻運</h1>
                                 <h2 className="text-4xl md:text-5xl font-bold text-amber-500 tracking-widest text-nowrap">聚福堂</h2>
                             </div>
@@ -333,7 +344,9 @@
                                         <MountainLogo className="w-full h-full" />
                                     </div>
                                     <div className="title-section w-full text-center space-y-1 px-8 mb-2 relative z-10">
+                                        {/* 動態標題：卦名 */}
                                         <h2 className="text-xl md:text-3xl font-black text-white tracking-[0.1em] text-nowrap">{hexData.name}卦</h2>
+                                        {/* 動態標題：卦語 */}
                                         <h2 className="text-lg md:text-2xl font-black text-amber-400 tracking-[0.2em] text-nowrap">{hexData.lucky}</h2>
                                     </div>
                                 </div>
@@ -343,6 +356,7 @@
                                     </div>
                                     <div className="poetry-box bg-[#fdfaf2] border-l-4 border-amber-800 rounded-r-lg p-6 mb-6 text-stone-800 shadow-sm font-bold w-full">
                                         <div className="flex flex-col gap-6 w-full max-w-[300px] mx-auto py-2">
+                                            {/* 字體大小與靠左對齊 */}
                                             {hexData.textLines.map((line, i) => (
                                                 <JustifiedText 
                                                     key={i} 
@@ -357,7 +371,8 @@
                                             <span className="text-[10px] text-amber-800 font-bold opacity-50 uppercase tracking-tighter text-nowrap">Auth Date</span>
                                             <span className="auth-date-text text-sm md:text-base font-black text-nowrap">{currentDate}</span>
                                         </div>
-                                        <div className="card-seal w-14 h-14 md:w-20 md:h-20 bg-red-700 rounded-sm shadow-md transform rotate-1 border border-white/20 grid grid-cols-2 grid-rows-2 place-items-center text-white seal-font p-1">
+                                        {/* 縮小後的手機版印章：w-12 */}
+                                        <div className="card-seal w-12 h-12 md:w-20 md:h-20 bg-red-700 rounded-sm shadow-md transform rotate-1 border border-white/20 grid grid-cols-2 grid-rows-2 place-items-center text-white seal-font p-1">
                                             <div className="flex items-center justify-center">崇</div>
                                             <div className="flex items-center justify-center">正</div>
                                             <div className="flex items-center justify-center">寶</div>
