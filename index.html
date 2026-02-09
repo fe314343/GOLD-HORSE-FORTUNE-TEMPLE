@@ -13,8 +13,6 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <!-- html2canvas CDN -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <!-- QRCode CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&display=swap');
         
@@ -91,14 +89,6 @@
             line-height: 1;
             letter-spacing: 0.05em;
         }
-
-        @keyframes modal-fade-in {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .modal-enter {
-            animation: modal-fade-in 0.3s ease-out forwards;
-        }
     </style>
 </head>
 <body>
@@ -114,17 +104,11 @@
         const IconSparkles = ({ className }) => (
             <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3 1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
         );
-        const IconQrCode = ({ className }) => (
-            <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>
-        );
         const IconVolume2 = () => (
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
         );
         const IconVolumeX = () => (
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>
-        );
-        const IconX = () => (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
         );
 
         const MountainLogo = ({ className }) => (
@@ -193,7 +177,7 @@
           { id: 3, name: "屯", symbol: "水雷", lucky: "好事多磨", text: "元亨利貞，勿用有攸往，利建侯。" },
           { id: 4, name: "蒙", symbol: "山水", lucky: "啟蒙開智", text: "亨。匪我求童蒙，童蒙求我。" },
           { id: 5, name: "需", symbol: "水天", lucky: "時機成熟", text: "有孚，光亨，貞吉。利涉大川。" },
-          { id: 6, name: "訟", symbol: "天水", lucky: "止爭息訟", text: "有孚，窒惕，中吉，終凶。利見大人，不利涉大川。" },
+          { id: 6, name: "訟", symbol: "天水", lucky: "止爭息訟", text: "有孚，窒惕，中吉，終凶.利見大人，不利涉大川。" },
           { id: 7, name: "師", symbol: "地水", lucky: "馬到成功", text: "貞，丈人，吉，无咎。" },
           { id: 8, name: "比", symbol: "水地", lucky: "貴人相助", text: "吉。原筮，元永貞，无咎。不寧方來，後夫凶。" },
           { id: 9, name: "小畜", symbol: "風天", lucky: "小有斬獲", text: "亨。密雲不雨，自我西郊。" },
@@ -226,13 +210,10 @@
             const [lotNumber, setLotNumber] = useState('');
             const [currentDate, setCurrentDate] = useState('');
             const [isMuted, setIsMuted] = useState(false);
-            const [showQr, setShowQr] = useState(false);
-            const [isGenerating, setIsGenerating] = useState(false);
             
             const audioRef = useRef(null);
             const doorAudioRef = useRef(null);
             const cardRef = useRef(null);
-            const qrContainerRef = useRef(null);
 
             useEffect(() => {
                 const today = new Date();
@@ -259,29 +240,6 @@
                 };
             }, []);
 
-            useEffect(() => {
-                if (showQr && qrContainerRef.current) {
-                    qrContainerRef.current.innerHTML = "";
-                    const baseUri = window.location.origin + window.location.pathname;
-                    const finalUrl = `${baseUri}?lot=${lotNumber}`;
-                    try {
-                        if (typeof QRCode !== 'undefined') {
-                            new QRCode(qrContainerRef.current, {
-                                text: finalUrl,
-                                width: 240,
-                                height: 240,
-                                colorDark : "#a52a2a",
-                                colorLight : "#ffffff",
-                                correctLevel : QRCode.CorrectLevel.H
-                            });
-                            setTimeout(() => setIsGenerating(false), 500);
-                        }
-                    } catch (e) {
-                        setIsGenerating(false);
-                    }
-                }
-            }, [showQr, lotNumber]);
-
             const toggleMusic = () => {
                 if (!audioRef.current) return;
                 isMuted ? audioRef.current.play() : audioRef.current.pause();
@@ -300,12 +258,6 @@
                 setTimeout(() => setPage('result'), 2800);
             };
 
-            const resetAppAndGoHome = () => {
-                setShowQr(false);
-                setLotNumber('');
-                setPage('home');
-            };
-
             if (page === 'home') {
                 return (
                     <div className="min-h-screen bg-[#2d0a0a] text-stone-200 flex flex-col items-center justify-center p-6 relative overflow-hidden">
@@ -318,7 +270,6 @@
                         <div className="text-center z-10 w-full max-w-lg px-4">
                             <div className="mb-8 md:mb-12">
                                 <h2 className="text-amber-500 text-xs md:text-sm tracking-[0.4em] font-medium mb-3 uppercase text-nowrap">Gold Horse Fortune</h2>
-                                {/* 金紅漸層標題 */}
                                 <h1 className="text-5xl md:text-8xl font-black mb-2 drop-shadow-2xl tracking-tighter text-nowrap bg-clip-text text-transparent bg-gradient-to-b from-[#fde68a] via-[#fbbf24] to-[#991b1b]">金馬鴻運</h1>
                                 <h2 className="text-4xl md:text-5xl font-bold text-amber-500 tracking-widest text-nowrap">聚福堂</h2>
                             </div>
@@ -382,19 +333,16 @@
                                         <MountainLogo className="w-full h-full" />
                                     </div>
                                     <div className="title-section w-full text-center space-y-1 px-8 mb-2 relative z-10">
-                                        {/* 動態標題：卦名 */}
                                         <h2 className="text-xl md:text-3xl font-black text-white tracking-[0.1em] text-nowrap">{hexData.name}卦</h2>
-                                        {/* 動態標題：卦語 */}
                                         <h2 className="text-lg md:text-2xl font-black text-amber-400 tracking-[0.2em] text-nowrap">{hexData.lucky}</h2>
                                     </div>
                                 </div>
                                 <div className="card-bottom p-6 pb-10 flex flex-col items-center relative text-stone-800 paper-texture overflow-hidden flex-1 overflow-y-auto">
-                                    <div className="text-[10px] text-red-800 font-bold mb-6 tracking-[0.2em] opacity-80 uppercase text-center text-nowrap">
+                                    <div className="text-[10px] text-red-800 font-bold mb-6 tracking-[0.2em] opacity-80 uppercase text-center text-nowrap text-nowrap">
                                         — 崇正寶宮 易經第 {parseInt(lotNumber)} 卦 —
                                     </div>
                                     <div className="poetry-box bg-[#fdfaf2] border-l-4 border-amber-800 rounded-r-lg p-6 mb-6 text-stone-800 shadow-sm font-bold w-full">
                                         <div className="flex flex-col gap-6 w-full max-w-[300px] mx-auto py-2">
-                                            {/* 字體大小與靠左對齊 */}
                                             {hexData.textLines.map((line, i) => (
                                                 <JustifiedText 
                                                     key={i} 
@@ -419,39 +367,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        {/* 固定在最右下角的 QR 按鈕 */}
-                        <div className="fixed bottom-6 right-6 z-50">
-                            <button onClick={() => { setIsGenerating(true); setShowQr(true); }} className="bg-[#a52a2a] text-white p-5 rounded-full shadow-2xl flex items-center justify-center active:scale-90 transition-transform border-2 border-amber-500/20" title="領取福籤 QR Code">
-                                <IconQrCode className="w-8 h-8" />
-                            </button>
-                        </div>
-
-                        {showQr && (
-                            <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-[300] flex items-center justify-center p-6 text-center">
-                                <div className="bg-white rounded-3xl p-8 max-w-[340px] w-full modal-enter flex flex-col items-center relative shadow-2xl border border-white/10 text-center">
-                                    <button onClick={resetAppAndGoHome} className="absolute top-4 right-4 p-2 text-stone-400 hover:text-red-800 transition-colors">
-                                        <IconX />
-                                    </button>
-                                    <h3 className="text-xl font-bold text-stone-800 mb-6 text-nowrap">掃描領取福籤</h3>
-                                    <div className="bg-stone-50 p-4 rounded-2xl shadow-inner mb-6 flex items-center justify-center border border-stone-100 min-h-[250px] min-w-[250px] relative">
-                                        <div ref={qrContainerRef} className={isGenerating ? 'invisible' : 'visible'}></div>
-                                        {isGenerating && (
-                                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white/50 rounded-2xl">
-                                                <div className="w-10 h-10 border-4 border-amber-600 border-t-transparent rounded-full animate-spin"></div>
-                                                <span className="text-sm text-stone-500 text-nowrap">網址生成中...</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <p className="text-sm text-stone-600 text-center leading-relaxed font-bold">
-                                        請用手機相機掃描 QR Code<br/>即可進入該籤頁面並進行儲存
-                                    </p>
-                                    <p className="text-[10px] text-stone-400 mt-4 text-center">
-                                        ( 關閉視窗後將回到首頁 )
-                                    </p>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 );
             }
