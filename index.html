@@ -83,9 +83,8 @@
             box-shadow: inset 0 0 120px rgba(0,0,0,0.7);
         }
 
-        /* 調整印章字體大小以適應縮小後的容器 */
         .seal-font {
-            font-size: 18px; /* 手機版預設 */
+            font-size: 18px; 
             font-weight: 900;
             line-height: 1.1;
             letter-spacing: 0.05em;
@@ -103,8 +102,7 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- 子組件定義 (定義於頂層以防止 Error #130) ---
-
+        // --- 子組件 ---
         const IconChevronLeft = () => (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-9-6 9-6"/></svg>
         );
@@ -177,7 +175,7 @@
             );
         };
 
-        // --- 易經數據基礎 ---
+        // --- 易經數據補完 1-64 ---
         const hexagramsBase = [
           { id: 1, name: "乾", symbol: "天", lucky: "大展宏圖", text: "元亨利貞。大哉乾元，萬物資始，乃統天。雲行雨施，品物流形。" },
           { id: 2, name: "坤", symbol: "地", lucky: "厚德載物", text: "元亨，利牝馬之貞。君子有攸往，先迷後得主。" },
@@ -195,16 +193,59 @@
           { id: 14, name: "大有", symbol: "火天", lucky: "大豐收時", text: "元亨。" },
           { id: 15, name: "謙", symbol: "地山", lucky: "謙受益也", text: "亨，君子有終。" },
           { id: 16, name: "豫", symbol: "雷地", lucky: "愉悅順心", text: "利建侯行師。" },
+          { id: 17, name: "隨", symbol: "澤雷", lucky: "隨遇而安", text: "元亨利貞，无咎。" },
+          { id: 18, name: "蠱", symbol: "山風", lucky: "振疲起廢", text: "元亨，利涉大川。先甲三日，後甲三日。" },
+          { id: 19, name: "臨", symbol: "地澤", lucky: "親臨教化", text: "元亨利貞。至于八月有凶。" },
+          { id: 20, name: "觀", symbol: "風地", lucky: "觀察入微", text: "盥而不薦，有孚顒若。" },
+          { id: 21, name: "噬嗑", symbol: "火雷", lucky: "除障去礙", text: "亨。利用獄。" },
+          { id: 22, name: "賁", symbol: "山火", lucky: "裝飾美化", text: "亨。小利有攸往。" },
+          { id: 23, name: "剝", symbol: "山地", lucky: "剝落守靜", text: "不利有攸往。" },
+          { id: 24, name: "復", symbol: "地雷", lucky: "循環往復", text: "亨。出入无疾，朋來无咎。反復其道，七日來復。" },
+          { id: 25, name: "無妄", symbol: "天雷", lucky: "順其自然", text: "元亨利貞。其匪正有眚，不利有攸往。" },
+          { id: 26, name: "大畜", symbol: "山天", lucky: "大有所蓄", text: "利貞。不家食吉，利涉大川。" },
+          { id: 27, name: "頤", symbol: "山雷", lucky: "頤養天年", text: "貞吉。觀頤，自求口實。" },
+          { id: 28, name: "大過", symbol: "澤風", lucky: "超越常規", text: "棟橈。利有攸往，亨。" },
+          { id: 29, name: "坎", symbol: "水", lucky: "重重險阻", text: "習坎，有孚，維心亨，行有尚。" },
+          { id: 30, name: "離", symbol: "火", lucky: "附著光明", text: "利貞，亨。畜牝牛，吉。" },
+          { id: 31, name: "咸", symbol: "澤山", lucky: "感應契合", text: "亨，利貞，取女吉。" },
+          { id: 32, name: "恆", symbol: "雷風", lucky: "持之以恆", text: "亨，无咎，利貞，利有攸往。" },
+          { id: 33, name: "遯", symbol: "天山", lucky: "隱退避世", text: "亨，小利貞。" },
+          { id: 34, name: "大壯", symbol: "雷天", lucky: "壯大有為", text: "利貞。" },
+          { id: 35, name: "晉", symbol: "火地", lucky: "平步青雲", text: "康侯用錫馬蕃庶，晝日三接。" },
+          { id: 36, name: "明夷", symbol: "地火", lucky: "光明受損", text: "利艱貞。" },
+          { id: 37, name: "家人", symbol: "風火", lucky: "治家有方", text: "利女貞。" },
+          { id: 38, name: "睽", symbol: "火澤", lucky: "乖違異同", text: "小事吉。" },
+          { id: 39, name: "蹇", symbol: "水山", lucky: "前路艱辛", text: "利西南，不利東北。利見大人，貞吉。" },
+          { id: 40, name: "解", symbol: "水雷", lucky: "解脫危難", text: "利西南。无所往，其來復吉。有攸往，夙吉。" },
+          { id: 41, name: "損", symbol: "山澤", lucky: "損下益上", text: "有孚，元吉，无咎，可貞，利有攸往。" },
+          { id: 42, name: "益", symbol: "風雷", lucky: "利益共享", text: "利有攸往，利涉大川。" },
+          { id: 43, name: "夬", symbol: "澤天", lucky: "果斷決策", text: "揚于王庭，孚號，有厲。告自邑，利有攸往。" },
+          { id: 44, name: "姤", symbol: "天風", lucky: "意外相遇", text: "女壯，勿用取女。" },
+          { id: 45, name: "萃", symbol: "澤地", lucky: "聚集精華", text: "王假有廟，利見大人，亨，利貞。" },
+          { id: 46, name: "升", symbol: "地風", lucky: "穩步上升", text: "元亨。用見大人，勿恤。南征吉。" },
+          { id: 47, name: "困", symbol: "澤水", lucky: "困頓守貞", text: "亨，貞，大人吉，无咎。有言不信。" },
+          { id: 48, name: "井", symbol: "水風", lucky: "源遠流長", text: "改邑不改井，无喪无得，往來井井。" },
+          { id: 49, name: "革", symbol: "澤火", lucky: "變革更新", text: "已日乃孚。元亨利貞，悔亡。" },
+          { id: 50, name: "鼎", symbol: "火風", lucky: "鼎立定基", text: "元吉，亨。" },
+          { id: 51, name: "震", symbol: "雷", lucky: "震驚百里", text: "亨。震來虩虩，笑言啞啞。震驚百里。" },
+          { id: 52, name: "艮", symbol: "山", lucky: "止而不動", text: "艮其背，不獲其身；行其庭，不見其人。无咎。" },
+          { id: 53, name: "漸", symbol: "風山", lucky: "循序漸進", text: "女歸吉，利貞。" },
+          { id: 54, name: "歸妹", symbol: "雷澤", lucky: "終始大義", text: "征凶，无攸利。" },
+          { id: 55, name: "豐", symbol: "雷火", lucky: "豐盛碩果", text: "亨。王假之，勿憂，宜日中。" },
+          { id: 56, name: "旅", symbol: "火山", lucky: "羈旅出外", text: "小亨，旅貞吉。" },
+          { id: 57, name: "巽", symbol: "風", lucky: "謙遜順從", text: "小亨，利攸往，利見大人。" },
+          { id: 58, name: "兌", symbol: "澤", lucky: "喜悅溝通", text: "亨，利貞。" },
+          { id: 59, name: "渙", symbol: "風水", lucky: "散災解憂", text: "亨。王假有廟，利涉大川，利貞。" },
+          { id: 60, name: "節", symbol: "水澤", lucky: "節制有度", text: "亨。苦節不可貞。" },
+          { id: 61, name: "中孚", symbol: "風澤", lucky: "誠信感人", text: "豚魚吉，利涉大川，利貞。" },
+          { id: 62, name: "小過", symbol: "雷山", lucky: "小有過越", text: "亨，利貞。可小事，不可大事。" },
           { id: 63, name: "既濟", symbol: "水火", lucky: "功德圓滿", text: "亨，小利貞，初吉終亂。" },
           { id: 64, name: "未濟", symbol: "火水", lucky: "重新出發", text: "亨，小狐汔濟，濡其尾，无攸利。" }
         ];
 
-        // 自動生成 64 卦數據庫
         const fortuneData = {};
         for (let i = 1; i <= 64; i++) {
-            const base = hexagramsBase.find(h => h.id === i) || {
-                name: "周易", lucky: "吉祥如意", text: "道法自然，心誠則靈。"
-            };
+            const base = hexagramsBase.find(h => h.id === i) || { name: "卦", lucky: "吉", text: "心誠則靈" };
             const textLines = base.text.split(/[。！？]/).filter(t => t.trim().length > 0);
             fortuneData[i] = {
                 name: base.name,
@@ -218,7 +259,6 @@
             const [lotNumber, setLotNumber] = useState('');
             const [currentDate, setCurrentDate] = useState('');
             const [isMuted, setIsMuted] = useState(false);
-            
             const audioRef = useRef(null);
             const doorAudioRef = useRef(null);
             const cardRef = useRef(null);
@@ -229,14 +269,12 @@
                 audioRef.current = new Audio('assets/bgm.mp3');
                 audioRef.current.loop = true;
                 doorAudioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2177/2177-preview.mp3');
-
                 const urlParams = new URLSearchParams(window.location.search);
                 const lotParam = urlParams.get('lot');
                 if (lotParam && fortuneData[lotParam]) {
                     setLotNumber(lotParam);
                     setPage('result');
                 }
-
                 const playOnFirstInteraction = () => {
                     if (audioRef.current && !isMuted) audioRef.current.play().catch(() => {});
                     window.removeEventListener('mousedown', playOnFirstInteraction);
@@ -270,23 +308,19 @@
                 return (
                     <div className="min-h-screen bg-[#2d0a0a] text-stone-200 flex flex-col items-center justify-center p-6 relative overflow-hidden">
                         <MuteButton isMuted={isMuted} toggleMusic={toggleMusic} />
-                        
-                        {/* 縮小且多層次的雲朵佈置 */}
                         <CloudImage className="absolute top-[-4%] left-[-8%] w-[20rem] opacity-40 animate-float" />
                         <CloudImage className="absolute top-1/4 right-[-4%] w-[8rem] opacity-25 animate-float" style={{ animationDelay: '-1.5s' }} />
                         <CloudImage className="absolute top-1/2 left-[-12%] w-[15rem] opacity-35 animate-float" style={{ animationDelay: '-3s' }} />
                         <CloudImage className="absolute bottom-[-3%] right-[-6%] w-[12rem] opacity-45 animate-float" style={{ animationDelay: '-4.8s' }} />
-
                         <div className="text-center z-10 w-full max-w-lg px-4">
                             <div className="mb-8 md:mb-12">
                                 <h2 className="text-amber-500 text-xs md:text-sm tracking-[0.4em] font-medium mb-3 uppercase text-nowrap">Gold Horse Fortune</h2>
-                                {/* 金紅漸層標題 */}
                                 <h1 className="text-5xl md:text-8xl font-black mb-2 drop-shadow-2xl tracking-tighter text-nowrap bg-clip-text text-transparent bg-gradient-to-b from-[#fde68a] via-[#fbbf24] to-[#991b1b]">金馬鴻運</h1>
                                 <h2 className="text-4xl md:text-5xl font-bold text-amber-500 tracking-widest text-nowrap">聚福堂</h2>
                             </div>
                             <div className="relative mt-8 group">
                                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#5d1a1a] border border-amber-600/50 px-5 py-1 rounded-full z-20 shadow-lg text-nowrap">
-                                    <span className="text-amber-200 text-xs md:text-sm tracking-widest font-medium">誠心祈求 - 易經指引</span>
+                                    <span className="text-amber-200 text-xs md:text-sm tracking-widest font-medium">誠心祈求 - 靈籤指引</span>
                                 </div>
                                 <div className="bg-gradient-to-b from-amber-900/40 to-black/60 p-5 md:p-8 rounded-2xl border border-amber-500/30 shadow-[0_0_50px_rgba(251,191,36,0.15)] backdrop-blur-md">
                                     <div className="bg-black/50 border border-amber-500/50 rounded-lg p-3 mb-6">
@@ -323,17 +357,15 @@
             }
 
             if (page === 'result') {
-                const hexData = fortuneData[parseInt(lotNumber).toString()] || { name: "易", lucky: "大吉", textLines: ["心誠則靈"] };
+                const hexData = fortuneData[parseInt(lotNumber).toString()] || { name: "卦", lucky: "大吉", textLines: ["心誠則靈"] };
                 return (
                     <div className="min-h-screen bg-[#f4f3ed] flex flex-col items-center justify-center p-4 relative overflow-hidden">
                         <MuteButton isMuted={isMuted} toggleMusic={toggleMusic} />
-                        
                         <div className="w-full absolute top-6 left-6 z-50">
-                            <button onClick={() => setPage('home')} className="flex items-center text-red-900 text-sm font-bold p-3 bg-white/80 rounded-full shadow-md active:scale-95 transition-transform text-nowrap">
+                            <button onClick={() => { setPage('home'); setLotNumber(''); }} className="flex items-center text-red-900 text-sm font-bold p-3 bg-white/80 rounded-full shadow-md active:scale-95 transition-transform text-nowrap">
                                 <IconChevronLeft className="mr-1" /> 重返聚福堂
                             </button>
                         </div>
-
                         <div className="flex-1 flex items-center justify-center w-full mt-10 mb-10 overflow-hidden">
                             <div ref={cardRef} data-card-body className="relative w-full max-w-[340px] md:max-w-[420px] h-fit max-h-[82vh] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-2xl border border-stone-200 flex flex-col bg-white">
                                 <div className="card-top bg-[#a52a2a] p-4 md:p-6 pt-5 pb-4 flex flex-col items-center relative overflow-hidden shrink-0">
@@ -344,25 +376,18 @@
                                         <MountainLogo className="w-full h-full" />
                                     </div>
                                     <div className="title-section w-full text-center space-y-1 px-8 mb-2 relative z-10">
-                                        {/* 動態標題：卦名 */}
                                         <h2 className="text-xl md:text-3xl font-black text-white tracking-[0.1em] text-nowrap">{hexData.name}卦</h2>
-                                        {/* 動態標題：卦語 */}
                                         <h2 className="text-lg md:text-2xl font-black text-amber-400 tracking-[0.2em] text-nowrap">{hexData.lucky}</h2>
                                     </div>
                                 </div>
                                 <div className="card-bottom p-6 pb-10 flex flex-col items-center relative text-stone-800 paper-texture overflow-hidden flex-1 overflow-y-auto">
-                                    <div className="text-[10px] text-red-800 font-bold mb-6 tracking-[0.2em] opacity-80 uppercase text-center text-nowrap text-nowrap">
-                                        — 崇正寶宮 易經第 {parseInt(lotNumber)} 卦 —
+                                    <div className="text-[10px] text-red-800 font-bold mb-6 tracking-[0.2em] opacity-80 uppercase text-center text-nowrap">
+                                        — 崇正寶宮 —
                                     </div>
                                     <div className="poetry-box bg-[#fdfaf2] border-l-4 border-amber-800 rounded-r-lg p-6 mb-6 text-stone-800 shadow-sm font-bold w-full">
                                         <div className="flex flex-col gap-6 w-full max-w-[300px] mx-auto py-2">
-                                            {/* 字體大小與靠左對齊 */}
                                             {hexData.textLines.map((line, i) => (
-                                                <JustifiedText 
-                                                    key={i} 
-                                                    text={line} 
-                                                    className="text-[25px] md:text-[30px] text-red-950 leading-relaxed text-left" 
-                                                />
+                                                <JustifiedText key={i} text={line} className="text-[25px] md:text-[30px] text-red-950 leading-relaxed text-left" />
                                             ))}
                                         </div>
                                     </div>
@@ -371,7 +396,6 @@
                                             <span className="text-[10px] text-amber-800 font-bold opacity-50 uppercase tracking-tighter text-nowrap">Auth Date</span>
                                             <span className="auth-date-text text-sm md:text-base font-black text-nowrap">{currentDate}</span>
                                         </div>
-                                        {/* 縮小後的手機版印章：w-10 */}
                                         <div className="card-seal w-12 h-12 md:w-20 md:h-20 bg-red-700 rounded-sm shadow-md transform rotate-1 border border-white/20 grid grid-cols-2 grid-rows-2 place-items-center text-white seal-font p-1">
                                             <div className="flex items-center justify-center">崇</div>
                                             <div className="flex items-center justify-center">正</div>
@@ -385,7 +409,6 @@
                     </div>
                 );
             }
-
             return null;
         };
 
